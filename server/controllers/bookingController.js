@@ -5,16 +5,17 @@ export const createBooking = async (req, res) => {
   try {
     const {
       name,
-  email,
-  phone,
-  business,
-  industry,
-  challenge,
-  budget,
-  preferredDate,
-  preferredTime,
+      email,
+      phone,
+      business,
+      industry,
+      challenge,
+      budget,
+      preferredDate,
+      preferredTime,
     } = req.body;
 
+    // Validate required fields
     if (!name || !email || !challenge || !preferredDate || !preferredTime) {
       return res.status(400).json({
         success: false,
@@ -23,40 +24,42 @@ export const createBooking = async (req, res) => {
       });
     }
 
+    // Insert booking into database
     const result = await pool.query(
       `
-      INSERT INTO bookings(
+      INSERT INTO bookings (
         name,
-  email,
-  phone,
-  business,
-  industry,
-  challenge,
-  budget,
-  preferredDate,
-  preferredTime,
+        email,
+        phone,
+        business,
+        industry,
+        challenge,
+        budget,
+        preferred_date,
+        preferred_time
       )
-      VALUES(
+      VALUES (
         $1,$2,$3,$4,
-        $5,$6,$7,$8
+        $5,$6,$7,$8,$9
       )
-      RETURNING *
+      RETURNING *;
       `,
       [
         name,
-  email,
-  phone,
-  business,
-  industry,
-  challenge,
-  budget,
-  preferredDate,
-  preferredTime,
+        email,
+        phone,
+        business,
+        industry,
+        challenge,
+        budget,
+        preferredDate,
+        preferredTime,
       ]
     );
 
     const booking = result.rows[0];
 
+    // Send confirmation emails
     await sendBookingEmails(booking);
 
     return res.status(201).json({
@@ -64,12 +67,14 @@ export const createBooking = async (req, res) => {
       message: "Booking created successfully. Emails sent.",
       booking,
     });
+
   } catch (err) {
-    console.log("Booking error:", err);
+    console.error("Booking error:", err); // Shows exact error in Render logs
 
     return res.status(500).json({
       success: false,
-      error: "Failed to create booking",
+      message: "Failed to create booking",
+      error: err.message, // helpful during debugging
     });
   }
 };
