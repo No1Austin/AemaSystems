@@ -8,27 +8,21 @@ dotenv.config();
 
 const app = express();
 
-app.use(
-  cors({
-    origin: [
-      "https://aema-systems.vercel.app",
-      "http://localhost:5173",
-    ],
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: "https://aema-systems.vercel.app",
+  methods: ["GET", "POST", "OPTIONS"],
+  credentials: true,
+}));
+
+app.options(/.*/, cors());
 
 app.use(express.json());
-app.use("/api/bookings", bookingRoutes);
 
 app.get("/", (req, res) => {
   res.send("AEMA Systems API Running");
 });
 
-app.use(
-  "/api/bookings",
-  bookingRoutes
-);
+app.use("/api/bookings", bookingRoutes);
 
 const PORT = process.env.PORT || 8000;
 
