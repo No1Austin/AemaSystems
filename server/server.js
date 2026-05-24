@@ -10,7 +10,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["https://aema-systems.vercel.app/"],
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );

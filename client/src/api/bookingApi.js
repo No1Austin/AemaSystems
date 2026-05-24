@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API_URL =
-"https://aemasystems.onrender.com";
+`${import.meta.env.VITE_API_URL}/api/bookings`;
 
 export const createBooking =
 async (data) => {
@@ -11,13 +11,12 @@ async (data) => {
     API_URL,
     data,
     {
-      headers:{
+      headers: {
         "Content-Type":
-        "application/json"
-      }
+        "application/json",
+      },
     }
   );
 
   return response.data;
-
 };
