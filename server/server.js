@@ -10,12 +10,16 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: [
+      "https://aema-systems.vercel.app",
+      "http://localhost:5173",
+    ],
     credentials: true,
   })
 );
 
 app.use(express.json());
+app.use("/api/bookings", bookingRoutes);
 
 app.get("/", (req, res) => {
   res.send("AEMA Systems API Running");
