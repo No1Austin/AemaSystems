@@ -5,13 +5,14 @@ export const createBooking = async (req, res) => {
   try {
     const {
       name,
-      email,
-      business,
-      industry,
-      challenge,
-      budget,
-      preferredDate,
-      preferredTime,
+  email,
+  phone,
+  business,
+  industry,
+  challenge,
+  budget,
+  preferredDate,
+  preferredTime,
     } = req.body;
 
     if (!name || !email || !challenge || !preferredDate || !preferredTime) {
@@ -26,13 +27,14 @@ export const createBooking = async (req, res) => {
       `
       INSERT INTO bookings(
         name,
-        email,
-        business,
-        industry,
-        challenge,
-        budget,
-        preferred_date,
-        preferred_time
+  email,
+  phone,
+  business,
+  industry,
+  challenge,
+  budget,
+  preferredDate,
+  preferredTime,
       )
       VALUES(
         $1,$2,$3,$4,
@@ -42,13 +44,14 @@ export const createBooking = async (req, res) => {
       `,
       [
         name,
-        email,
-        business,
-        industry,
-        challenge,
-        budget,
-        preferredDate,
-        preferredTime,
+  email,
+  phone,
+  business,
+  industry,
+  challenge,
+  budget,
+  preferredDate,
+  preferredTime,
       ]
     );
 
