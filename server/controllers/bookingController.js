@@ -26,41 +26,42 @@ export const createBooking = async (req, res) => {
 
     // Insert booking into database
     const result = await pool.query(
-      `
-      INSERT INTO bookings (
-        name,
-        email,
-        phone,
-        business,
-        industry,
-        challenge,
-        budget,
-        preferred_date,
-        preferred_time
-      )
-      VALUES (
-        $1,$2,$3,$4,
-        $5,$6,$7,$8,$9
-      )
-      RETURNING *;
-      `,
-      [
-        name,
-        email,
-        phone,
-        business,
-        industry,
-        challenge,
-        budget,
-        preferredDate,
-        preferredTime,
-      ]
-    );
+  `
+  INSERT INTO bookings (
+    name,
+    email,
+    phone,
+    business,
+    industry,
+    challenge,
+    budget,
+    preferred_date,
+    preferred_time
+  )
+  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+  RETURNING *;
+  `,
+  [
+    name,
+    email,
+    phone,
+    business,
+    industry,
+    challenge,
+    budget,
+    preferredDate,
+    preferredTime,
+  ]
+);
 
     const booking = result.rows[0];
 
     // Send confirmation emails
-    await sendBookingEmails(booking);
+    try {
+  await sendBookingEmails(booking);
+} catch (emailErr) {
+  console.error("Email error:", emailErr);
+}
 
     return res.status(201).json({
       success: true,
