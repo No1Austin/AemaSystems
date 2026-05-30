@@ -5,15 +5,15 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative min-h-screen overflow-hidden bg-[#020617] px-6 py-10 text-white md:px-12 lg:px-20"
+      className="relative isolate min-h-screen overflow-hidden bg-[#020617] px-6 py-10 text-white md:px-12 lg:px-20"
     >
       <motion.div
-        className="absolute inset-0 bg-[radial-gradient(circle_at_70%_35%,rgba(37,99,235,0.22),transparent_30%),radial-gradient(circle_at_30%_80%,rgba(16,185,129,0.12),transparent_25%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_70%_35%,rgba(37,99,235,0.22),transparent_30%),radial-gradient(circle_at_30%_80%,rgba(16,185,129,0.12),transparent_25%)]"
         animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.05, 1] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="absolute inset-0 opacity-20">
+      <div className="pointer-events-none absolute inset-0 opacity-20">
         <div className="h-full w-full bg-[linear-gradient(to_right,rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:280px_280px]" />
       </div>
 
@@ -30,7 +30,7 @@ export default function Hero() {
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
               <Sparkles size={16} />
-              AI • Automation • Business Systems
+              Software Development • AI Automation • SEO • E-Commerce
             </motion.div>
 
             <p className="mb-4 text-sm font-semibold uppercase tracking-[0.45em] text-slate-400">
@@ -54,9 +54,11 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
             >
-              We build custom web applications, booking platforms, AI workflows,
-              automation tools, and business systems that help growing companies
-              operate smarter and scale with confidence.
+              AEMA Systems builds custom software, business websites, booking
+              platforms, e-commerce stores, SEO strategies, AI automation
+              workflows, admin dashboards, and business systems that help
+              growing companies operate smarter, improve visibility, and scale
+              with confidence.
             </motion.p>
 
             <motion.div
@@ -71,7 +73,7 @@ export default function Hero() {
                 whileTap={{ scale: 0.97 }}
                 className="inline-flex items-center justify-center rounded-none border border-blue-500 bg-blue-600 px-8 py-4 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-blue-500"
               >
-                Let&apos;s Build <ArrowRight className="ml-3" size={18} />
+                Book a Consultation <ArrowRight className="ml-3" size={18} />
               </motion.a>
 
               <motion.a
@@ -80,7 +82,7 @@ export default function Hero() {
                 whileTap={{ scale: 0.97 }}
                 className="inline-flex items-center justify-center rounded-none border border-white/20 px-8 py-4 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-white/10"
               >
-                Explore Systems
+                Explore Services
               </motion.a>
             </motion.div>
           </motion.div>
@@ -123,11 +125,11 @@ export default function Hero() {
 
                 <div className="mt-8 space-y-5">
                   {[
-                    "Business idea captured",
-                    "Workflow mapped",
-                    "AI automation planned",
+                    "Software solution planned",
+                    "Business workflow mapped",
+                    "AI automation connected",
+                    "SEO visibility improved",
                     "Booking system deployed",
-                    "Admin dashboard connected",
                   ].map((item, index) => (
                     <motion.div
                       key={item}
