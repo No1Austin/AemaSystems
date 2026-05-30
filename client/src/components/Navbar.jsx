@@ -18,9 +18,10 @@ export default function Navbar() {
 
         {/* Logo */}
         <img
+
   src="/aema-logo.png"
   alt="AEMA Systems"
-  className="h-12 w-auto"
+  className="h-14 w-auto md:h-16"
 />
 
 
