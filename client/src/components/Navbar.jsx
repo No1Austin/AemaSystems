@@ -17,9 +17,11 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between">
 
         {/* Logo */}
-        <a href="#home" className="text-xl font-bold">
-          AEMA Systems
-        </a>
+        <img
+  src="/aema-logo.png"
+  alt="AEMA Systems"
+  className="h-12 w-auto"
+/>
 
 
         {/* Desktop Nav */}
