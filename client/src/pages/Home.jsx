@@ -77,7 +77,7 @@ export default function Home() {
           <p className="mt-4 max-w-3xl text-slate-300">
             Join AEMA Systems events, workshops, and business technology sessions.
           </p>
-
+          
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {events.map((event) => (
               <div

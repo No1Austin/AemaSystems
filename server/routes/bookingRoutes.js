@@ -20,8 +20,5 @@ router.post(
 "/",
 
 createBooking
-
 );
-
-
 export default router;
