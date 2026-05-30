@@ -25,33 +25,36 @@ export const sendBookingEmails = async (booking) => {
         <p><strong>Email:</strong> ${booking.email}</p>
         <p><strong>Phone:</strong> ${booking.phone || "Not provided"}</p>
 
-        <p><strong>Business:</strong>
-        ${booking.business || "N/A"}</p>
+        <p><strong>Business:</strong> ${
+          booking.business || "N/A"
+        }</p>
 
-        <p><strong>Industry:</strong>
-        ${booking.industry || "N/A"}</p>
+        <p><strong>Industry:</strong> ${
+          booking.industry || "N/A"
+        }</p>
 
-        <p><strong>Budget:</strong>
-        ${booking.budget || "N/A"}</p>
+        <p><strong>Budget:</strong> ${
+          booking.budget || "N/A"
+        }</p>
 
-        <p><strong>Preferred Date:</strong>
-        ${booking.preferred_date || "N/A"}</p>
+        <p><strong>Preferred Date:</strong> ${
+          booking.preferred_date || "N/A"
+        }</p>
 
-        <p><strong>Preferred Time:</strong>
-        ${booking.preferred_time || "N/A"}</p>
+        <p><strong>Preferred Time:</strong> ${
+          booking.preferred_time || "N/A"
+        }</p>
 
         <h3>Challenge / Project Need</h3>
 
-        <p>${booking.challenge}</p>
+        <p>${booking.challenge || "Not provided"}</p>
       `,
     });
 
-    console.log("Admin email sent:", adminResult);
-
+    console.log("✅ Admin email sent:", adminResult);
   } catch (err) {
-    console.error("Admin email failed:", err);
+    console.error("❌ Admin email failed:", err);
   }
-
 
   // ======================
   // CLIENT EMAIL
@@ -76,7 +79,7 @@ export const sendBookingEmails = async (booking) => {
           We received your request and will contact you shortly.
         </p>
 
-        <hr/>
+        <hr />
 
         <p>
           <strong>Preferred Date:</strong>
@@ -93,21 +96,31 @@ export const sendBookingEmails = async (booking) => {
           ${booking.business || "N/A"}
         </p>
 
-        <br/>
-
         <p>
-          We're excited to learn more about your project.
+          <strong>Industry:</strong>
+          ${booking.industry || "N/A"}
         </p>
 
-        <br/>
+        <br />
 
-        <p>— AEMA Systems</p>
+        <p>
+          We're excited to learn more about your project and explore how
+          AEMA Systems can help streamline your operations, automate
+          workflows, and build the right digital solutions for your business.
+        </p>
+
+        <br />
+
+        <p>
+          Best regards,
+          <br />
+          <strong>AEMA Systems</strong>
+        </p>
       `,
     });
 
-    console.log("Client email sent:", clientResult);
-
+    console.log("✅ Client email sent:", clientResult);
   } catch (err) {
-    console.error("Client email failed:", err);
+    console.error("❌ Client email failed:", err);
   }
 };
