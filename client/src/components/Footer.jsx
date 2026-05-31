@@ -61,10 +61,10 @@ export default function Footer() {
               </a>
 
               <a
-                href="mailto:your@email.com"
+                href="mailto:austin@aemasystems.com"
                 className="transition hover:text-cyan-400"
               >
-                your@email.com
+                austin@aemasystems.com
               </a>
 
               <a
