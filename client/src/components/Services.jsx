@@ -8,6 +8,10 @@ import {
   LayoutDashboard,
   CalendarCheck,
   BarChart3,
+  Zap,
+  ShieldCheck,
+  Rocket,
+  Headphones,
 } from "lucide-react";
 
 const services = [
@@ -15,65 +19,63 @@ const services = [
     title: "Software Development",
     Icon: Code2,
     description:
-      "Custom web applications, business management systems, client portals, dashboards, and scalable digital platforms built for real business operations.",
-    keywords: ["Web Apps", "Dashboards", "Client Portals", "API Integrations"],
+      "Custom web applications, client portals, dashboards, and scalable digital platforms built for real business operations.",
   },
   {
     title: "AI Automation",
     Icon: Bot,
     description:
-      "AI-powered workflows and automation tools that reduce manual work, improve response times, and help businesses operate smarter.",
-    keywords: ["AI Workflows", "Lead Automation", "Email Automation", "Smart Tools"],
-  },
-  {
-    title: "Business Systems",
-    Icon: Workflow,
-    description:
-      "Practical systems for operations, workflow design, process improvement, CRM setup, reporting, and business performance tracking.",
-    keywords: ["Operations", "CRM", "Workflow Design", "Process Improvement"],
-  },
-  {
-    title: "E-Commerce Development",
-    Icon: ShoppingCart,
-    description:
-      "Modern online stores, Shopify websites, WooCommerce solutions, payment integration, product pages, and sales-focused customer experiences.",
-    keywords: ["Shopify", "WooCommerce", "Online Stores", "Payments"],
+      "AI workflows and automation tools that reduce manual work and help businesses operate smarter.",
   },
   {
     title: "SEO Optimization",
     Icon: Search,
     description:
-      "Search engine optimization services including technical SEO, on-page SEO, local SEO, Google Search Console setup, and keyword strategy.",
-    keywords: ["Technical SEO", "Local SEO", "On-Page SEO", "Search Console"],
+      "Technical SEO, on-page SEO, local SEO, Search Console setup, and keyword strategy to improve visibility.",
+  },
+  {
+    title: "E-Commerce Development",
+    Icon: ShoppingCart,
+    description:
+      "Shopify, WooCommerce, online stores, payment integration, product pages, and sales-focused experiences.",
+  },
+  {
+    title: "Business Systems",
+    Icon: Workflow,
+    description:
+      "Operations systems, workflow design, CRM setup, reporting, and process improvement for growth.",
   },
   {
     title: "Business Websites",
     Icon: Globe,
     description:
-      "Professional business websites, landing pages, portfolio sites, and responsive digital experiences designed to build trust and convert visitors.",
-    keywords: ["Web Design", "Landing Pages", "Responsive Design", "Brand Presence"],
+      "Professional websites, landing pages, responsive design, and digital presence built to convert visitors.",
   },
   {
     title: "Booking Systems",
     Icon: CalendarCheck,
     description:
-      "Custom booking platforms for consultations, appointments, service businesses, events, reminders, and client scheduling workflows.",
-    keywords: ["Scheduling", "Appointments", "Consultations", "Reminders"],
+      "Custom booking platforms for consultations, appointments, reminders, and client scheduling workflows.",
   },
   {
     title: "Admin Dashboards",
     Icon: LayoutDashboard,
     description:
-      "Secure admin dashboards for managing users, bookings, orders, analytics, forms, reports, and day-to-day business activities.",
-    keywords: ["Admin Panels", "Reports", "Analytics", "User Management"],
+      "Secure dashboards for users, bookings, orders, reports, analytics, and business activity management.",
   },
   {
     title: "Operations Support",
     Icon: BarChart3,
     description:
-      "Digital operations support for growing businesses that need better systems, clearer workflows, reporting, and technology guidance.",
-    keywords: ["Operations", "Reporting", "Strategy", "Business Growth"],
+      "Digital operations support, reporting, systems guidance, and technology planning for growing businesses.",
   },
+];
+
+const highlights = [
+  ["Fast Delivery", "On-time, every time.", Zap],
+  ["Secure & Reliable", "Built with best practices.", ShieldCheck],
+  ["Scalable Solutions", "Designed for growth.", Rocket],
+  ["Ongoing Support", "Support beyond launch.", Headphones],
 ];
 
 const industries = [
@@ -93,75 +95,109 @@ export default function Services() {
       id="services"
       className="relative overflow-hidden bg-[#020617] px-6 py-24 text-white"
     >
-      <div className="mx-auto max-w-7xl">
-        <p className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
-          Services
-        </p>
+      {/* Background Glow */}
+      <div className="pointer-events-none absolute left-1/2 top-20 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-600/20 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-20 left-10 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
 
-        <h2 className="mt-3 max-w-5xl text-3xl font-black md:text-5xl">
-          Technology Solutions That Drive Growth
+      <div className="relative z-10 mx-auto max-w-7xl text-center">
+        <div className="mx-auto inline-flex rounded-full border border-blue-500/20 bg-blue-500/10 px-6 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-blue-300">
+          What We Do
+        </div>
+
+        <h2 className="mx-auto mt-6 max-w-5xl text-4xl font-black leading-tight md:text-6xl">
+          Powerful Digital Solutions <br />
+          Built for <span className="text-blue-500">Your Business</span>
         </h2>
 
-        <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-300">
-          Austin Amadi | AEMA Systems helps businesses build digital platforms,
-          automate operations, improve search visibility, launch e-commerce
-          stores, and create intelligent systems that support long-term growth.
+        <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-300">
+          AEMA Systems helps businesses automate, optimize, and grow with custom
+          software, AI automation, SEO, e-commerce, booking platforms, and
+          high-performance business systems.
         </p>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {services.map(({ title, Icon, description, keywords }) => (
-            <article
+        {/* Moving Services */}
+        <div className="relative mt-16 overflow-hidden">
+          <div className="flex w-max animate-[scrollServices_35s_linear_infinite] gap-6 hover:[animation-play-state:paused]">
+            {[...services, ...services].map(({ title, Icon, description }, index) => (
+              <article
+                key={`${title}-${index}`}
+                className="group flex h-[300px] w-[260px] shrink-0 flex-col items-center justify-center rounded-3xl border border-white/10 bg-white/[0.04] p-7 text-center backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:border-blue-400/70 hover:bg-white/[0.08] hover:shadow-2xl hover:shadow-blue-500/20"
+              >
+                <Icon
+                  size={48}
+                  className="mb-6 text-blue-400 transition duration-300 group-hover:scale-110 group-hover:text-cyan-300"
+                />
+
+                <h3 className="text-xl font-bold text-white">{title}</h3>
+
+                <p className="mt-4 text-sm leading-7 text-slate-300">
+                  {description}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        {/* Highlights */}
+        <div className="mx-auto mt-14 grid max-w-5xl gap-6 md:grid-cols-4">
+          {highlights.map(([title, text, Icon]) => (
+            <div
               key={title}
-              className="group rounded-3xl border border-white/10 bg-white/5 p-6 transition duration-300 hover:-translate-y-2 hover:border-emerald-400/60 hover:bg-white/10"
+              className="flex items-center justify-center gap-4 border-white/10 md:border-r md:last:border-r-0"
             >
-              <Icon className="mb-5 text-emerald-400" size={34} />
+              <Icon className="text-blue-400" size={30} />
 
-              <h3 className="text-xl font-bold text-white">{title}</h3>
-
-              <p className="mt-4 text-sm leading-7 text-slate-300">
-                {description}
-              </p>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                {keywords.map((keyword) => (
-                  <span
-                    key={keyword}
-                    className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300"
-                  >
-                    {keyword}
-                  </span>
-                ))}
+              <div className="text-left">
+                <h4 className="font-bold text-white">{title}</h4>
+                <p className="mt-1 text-sm text-slate-400">{text}</p>
               </div>
-            </article>
+            </div>
           ))}
         </div>
 
-        <div className="mx-auto mt-16 max-w-5xl text-center">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-            <h3 className="text-2xl font-bold text-white md:text-3xl">
-              Industries We Support
-            </h3>
+        {/* Industries */}
+        <div className="mx-auto mt-16 max-w-5xl rounded-3xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
+          <h3 className="text-2xl font-bold text-white md:text-3xl">
+            Industries We Support
+          </h3>
 
-            <p className="mx-auto mt-5 max-w-4xl text-lg leading-8 text-slate-300">
-              From healthcare providers and educational institutions to retail
-              businesses, professional service firms, nonprofits, and growing
-              startups, AEMA Systems delivers practical technology solutions
-              that improve efficiency, visibility, and long-term growth.
-            </p>
+          <p className="mx-auto mt-5 max-w-4xl text-lg leading-8 text-slate-300">
+            From healthcare providers and educational institutions to retail
+            businesses, professional service firms, nonprofits, and growing
+            startups, AEMA Systems delivers practical technology solutions that
+            improve efficiency, visibility, and long-term growth.
+          </p>
 
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              {industries.map((industry) => (
-                <span
-                  key={industry}
-                  className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-300"
-                >
-                  {industry}
-                </span>
-              ))}
-            </div>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            {industries.map((industry) => (
+              <span
+                key={industry}
+                className="rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-300"
+              >
+                {industry}
+              </span>
+            ))}
           </div>
         </div>
+
+        <a
+          href="#booking"
+          className="mx-auto mt-12 inline-flex items-center justify-center rounded-xl border border-blue-500 bg-blue-600 px-8 py-4 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-blue-500"
+        >
+          Let&apos;s Build Something Amazing
+        </a>
       </div>
+
+      <style>{`
+        @keyframes scrollServices {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
     </section>
   );
 }
