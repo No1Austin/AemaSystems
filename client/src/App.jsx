@@ -9,7 +9,7 @@ import SeoOptimization from "./services/seo-optimization";
 import EcommerceDevelopment from "./services/ecommerce-development";
 import AboutAemaSystems from "./services/about-aema-systems";
 
-import Healthcare from "./industries/Healthcare";
+import Healthcare from "./industries/healthcare";
 import Education from "./industries/education";
 import Retail from "./industries/retail";
 import Startups from "./industries/startups";
