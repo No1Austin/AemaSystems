@@ -1,19 +1,15 @@
 import axios from "axios";
 
-const API_URL =
-`${import.meta.env.VITE_API_URL}/api/bookings`;
+const WEBHOOK_URL =
+  "https://aemasystem.app.n8n.cloud/webhook/aema-booking";
 
-export const createBooking =
-async (data) => {
-
-  const response =
-  await axios.post(
-    API_URL,
+export const createBooking = async (data) => {
+  const response = await axios.post(
+    WEBHOOK_URL,
     data,
     {
       headers: {
-        "Content-Type":
-        "application/json",
+        "Content-Type": "application/json",
       },
     }
   );

@@ -1,159 +1,114 @@
+import {
+  ArrowRight,
+  CalendarDays,
+  Sparkles,
+  Code2,
+  Bot,
+  Workflow,
+  Rocket,
+} from "lucide-react";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
 
 export default function Hero() {
+  const offers = [
+    ["AI Automation", "Smart workflows that save time.", Bot],
+    ["Custom Software", "Web apps built for business growth.", Code2],
+    ["Business Systems", "Tools that improve operations.", Workflow],
+    ["Digital Growth", "SEO, e-commerce, and automation.", Rocket],
+  ];
+
   return (
     <section
       id="home"
-      className="relative isolate min-h-screen overflow-hidden bg-[#020617] px-6 py-10 text-white md:px-12 lg:px-20"
+      className="relative min-h-screen overflow-hidden bg-[#020617] px-6 pt-32 text-white md:px-12 lg:px-20"
     >
-      <motion.div
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_70%_35%,rgba(37,99,235,0.22),transparent_30%),radial-gradient(circle_at_30%_80%,rgba(16,185,129,0.12),transparent_25%)]"
-        animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.05, 1] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      />
+      <div className="absolute inset-0">
+        <img
+          src="/aema-ai-bg.png"
+          alt="AEMA Systems AI background"
+          className="h-full w-full object-cover object-center"
+        />
 
-      <div className="pointer-events-none absolute inset-0 opacity-20">
-        <div className="h-full w-full bg-[linear-gradient(to_right,rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:280px_280px]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/78 to-[#020617]/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-[#020617]/40" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[85vh] max-w-7xl items-center">
-        <div className="grid w-full items-center gap-12 lg:grid-cols-[1fr_0.9fr]">
-          <motion.div
-            initial={{ opacity: 0, y: 35 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <motion.div
-              className="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-200"
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Sparkles size={16} />
-              Software Development • AI Automation • SEO • E-Commerce
-            </motion.div>
-
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.45em] text-slate-400">
-              AEMA Systems
-            </p>
-
-            <motion.h1
-              className="max-w-4xl text-5xl font-black uppercase leading-[0.9] tracking-[-0.08em] md:text-7xl lg:text-8xl"
-              initial={{ opacity: 0, y: 25 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.8 }}
-            >
-              From Ideas
-              <span className="block text-blue-500">To Intelligent</span>
-              Systems
-            </motion.h1>
-
-            <motion.p
-              className="mt-8 max-w-2xl border-l-2 border-blue-500 pl-5 text-base leading-8 text-slate-300 md:text-lg"
-              initial={{ opacity: 0, y: 25 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-            >
-              AEMA Systems builds custom software, business websites, booking
-              platforms, e-commerce stores, SEO strategies, AI automation
-              workflows, admin dashboards, and business systems that help
-              growing companies operate smarter, improve visibility, and scale
-              with confidence.
-            </motion.p>
-
-            <motion.div
-              className="mt-10 flex flex-col gap-4 sm:flex-row"
-              initial={{ opacity: 0, y: 25 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.45, duration: 0.8 }}
-            >
-              <motion.a
-                href="#booking"
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center justify-center rounded-none border border-blue-500 bg-blue-600 px-8 py-4 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-blue-500"
-              >
-                Book a Consultation <ArrowRight className="ml-3" size={18} />
-              </motion.a>
-
-              <motion.a
-                href="#services"
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center justify-center rounded-none border border-white/20 px-8 py-4 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-white/10"
-              >
-                Explore Services
-              </motion.a>
-            </motion.div>
-          </motion.div>
-
-          <div className="relative hidden lg:block">
-            <motion.div
-              className="absolute -inset-10 rounded-full bg-blue-600/20 blur-3xl"
-              animate={{ opacity: [0.4, 0.9, 0.4], scale: [1, 1.12, 1] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            />
-
-            <motion.div
-              className="relative ml-auto h-[520px] w-[420px] rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur"
-              initial={{ opacity: 0, x: 80, rotateY: -12 }}
-              animate={{
-                opacity: 1,
-                x: 0,
-                rotateY: 0,
-                y: [0, -14, 0],
-              }}
-              transition={{
-                opacity: { duration: 0.8 },
-                x: { duration: 0.8 },
-                rotateY: { duration: 0.8 },
-                y: { duration: 5, repeat: Infinity, ease: "easeInOut" },
-              }}
-            >
-              <div className="h-full rounded-[1.5rem] border border-white/10 bg-slate-950/80 p-6">
-                <div className="flex items-center justify-between border-b border-white/10 pb-5">
-                  <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
-                    System Core
-                  </p>
-
-                  <motion.div
-                    className="h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.9)]"
-                    animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-                    transition={{ duration: 1.4, repeat: Infinity }}
-                  />
-                </div>
-
-                <div className="mt-8 space-y-5">
-                  {[
-                    "Software solution planned",
-                    "Business workflow mapped",
-                    "AI automation connected",
-                    "SEO visibility improved",
-                    "Booking system deployed",
-                  ].map((item, index) => (
-                    <motion.div
-                      key={item}
-                      initial={{ opacity: 0, x: 45 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.7 + index * 0.15, duration: 0.5 }}
-                      whileHover={{
-                        scale: 1.03,
-                        borderColor: "rgba(96,165,250,0.8)",
-                        backgroundColor: "rgba(255,255,255,0.07)",
-                      }}
-                      className="flex items-center justify-between border border-white/10 bg-white/[0.03] p-4"
-                    >
-                      <span className="text-sm text-slate-300">{item}</span>
-                      <span className="text-xs text-blue-400">
-                        0{index + 1}
-                      </span>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-8rem)] max-w-7xl flex-col justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 26 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75 }}
+          className="max-w-lg"
+        >
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/40 bg-blue-500/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.24em] text-blue-200 backdrop-blur">
+            <Sparkles size={14} />
+            Technology • Automation • Growth
           </div>
-        </div>
+
+          <h1 className="font-black uppercase leading-[0.86] tracking-[-0.06em]">
+            <span className="block text-4xl text-white md:text-5xl lg:text-6xl">
+              From Ideas
+            </span>
+
+            <span className="block bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-300 bg-clip-text text-4xl text-transparent md:text-5xl lg:text-6xl">
+              To Intelligent
+            </span>
+
+            <span className="block text-4xl text-white md:text-5xl lg:text-6xl">
+              Systems
+            </span>
+          </h1>
+
+          <p className="mt-6 max-w-md text-sm leading-7 text-slate-300 md:text-base">
+            AEMA Systems transforms ideas into intelligent software, AI
+            automation, business systems, and digital platforms that help
+            organizations operate smarter, scale faster, and grow with
+            confidence.
+          </p>
+
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+            <a
+              href="#booking"
+              className="inline-flex items-center justify-center gap-3 rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-bold text-white transition hover:bg-blue-500"
+            >
+              <CalendarDays size={18} />
+              Book a Consultation
+              <ArrowRight size={18} />
+            </a>
+
+            <a
+              href="#aema-ai"
+              className="inline-flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/10"
+            >
+              <Sparkles size={18} />
+              Use AEMA AI
+              <ArrowRight size={18} />
+            </a>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 34 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.75 }}
+          className="mt-14 grid gap-4 rounded-3xl border border-white/10 bg-black/35 p-5 shadow-2xl backdrop-blur-xl md:grid-cols-4"
+        >
+          {offers.map(([title, text, Icon]) => (
+            <div
+              key={title}
+              className="flex items-start gap-4 border-white/10 md:border-r md:pr-5 md:last:border-r-0"
+            >
+              <div className="rounded-2xl bg-blue-600/10 p-3 text-blue-400">
+                <Icon size={24} />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-white">{title}</h3>
+                <p className="mt-1 text-xs leading-5 text-slate-400">{text}</p>
+              </div>
+            </div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );
