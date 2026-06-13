@@ -322,6 +322,80 @@
   padding: 40px;
   position: relative;
 }
+@media (max-width: 640px) {
+  .pricing-overlay {
+    align-items: flex-start;
+    padding: 14px;
+    overflow-y: auto;
+  }
+
+  .pricing-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 22px 14px;
+    border-radius: 24px;
+  }
+
+  .pricing-modal h2 {
+    font-size: 22px;
+    line-height: 1.2;
+    text-align: center;
+    padding-right: 34px;
+  }
+
+  .pricing-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pricing-card {
+    width: 100%;
+    min-height: auto;
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .pricing-card.featured {
+    transform: none;
+  }
+
+  .pricing-card h3 {
+    font-size: 20px;
+  }
+
+  .pricing-card h1 {
+    font-size: 28px;
+  }
+
+  .pricing-card ul {
+    margin-top: 12px;
+  }
+
+  .pricing-card li {
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .pricing-card button {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+  }
+
+  .badge {
+    position: static;
+    width: fit-content;
+    margin-bottom: 12px;
+  }
+
+  .close-btn {
+    top: 14px;
+    right: 14px;
+  }
+}
 
 .pricing-modal h2 {
   color: white;
@@ -797,4 +871,44 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+}
+@media (max-width: 640px) {
+  .aema-ai-navbar {
+    display: none !important;
+  }
+
+  .chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .chat-brand {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ai-header-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .clear-chat-btn,
+  .ai-menu-btn {
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .clear-chat-btn span {
+    display: none;
+  }
 }
