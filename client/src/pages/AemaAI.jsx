@@ -36,6 +36,7 @@ export default function AemaAI() {
   const [showPricing, setShowPricing] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [typingMessage, setTypingMessage] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const latestBlueprint =
     messages
@@ -125,30 +126,27 @@ export default function AemaAI() {
   }, []);
 
   const clearChat = () => {
-    const confirmed = window.confirm(
-      "Do you want to clear and delete this chat? This action cannot be undone."
-    );
+  if (typingIntervalRef.current) {
+    clearInterval(typingIntervalRef.current);
+    typingIntervalRef.current = null;
+  }
 
-    if (!confirmed) return;
+  localStorage.removeItem("aema_ai_messages");
+  setInput("");
+  setShowPricing(false);
+  setIsThinking(false);
+  setTypingMessage(null);
 
-    if (typingIntervalRef.current) {
-      clearInterval(typingIntervalRef.current);
-      typingIntervalRef.current = null;
-    }
+  setMessages([
+    {
+      role: "assistant",
+      content: firstQuestion,
+    },
+  ]);
 
-    localStorage.removeItem("aema_ai_messages");
-    setInput("");
-    setShowPricing(false);
-    setIsThinking(false);
-    setTypingMessage(null);
+  setShowDeleteModal(false);
+};
 
-    setMessages([
-      {
-        role: "assistant",
-        content: firstQuestion,
-      },
-    ]);
-  };
 
   const sendMessage = async () => {
     if (!input.trim() || isBusy) return;
@@ -202,10 +200,13 @@ export default function AemaAI() {
             </p>
           </div>
 
-          <button className="clear-chat-btn" onClick={clearChat} type="button">
-            <Trash2 size={16} />
-            Clear Chat
-          </button>
+        <button
+  className="clear-chat-btn"
+  onClick={() => setShowDeleteModal(true)}
+>
+  <Trash2 size={18} />
+  <span>Clear Chat</span>
+</button>
         </div>
 
         <div className="chat-body">
@@ -362,6 +363,34 @@ export default function AemaAI() {
         onClose={() => setShowPricing(false)}
         profile={latestBlueprint}
       />
+
+      {showDeleteModal && (
+  <div className="delete-modal-overlay">
+    <div className="delete-modal">
+      <h3>Delete Chat?</h3>
+
+      <p>
+        This will permanently remove your AEMA conversation history.
+      </p>
+
+      <div className="delete-modal-actions">
+        <button
+          className="cancel-btn"
+          onClick={() => setShowDeleteModal(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="delete-btn"
+          onClick={clearChat}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </main>
   );
 }
