@@ -424,8 +424,9 @@
   justify-content: center;
   z-index: 99999;
   padding: 20px;
+}
 
-  @keyframes heartbeat {
+@keyframes heartbeat {
   0% {
     transform: scale(1);
   }
@@ -451,10 +452,8 @@
   }
 }
 
-
 .growth-heartbeat {
   animation: heartbeat 2s infinite;
-}
 }
 
 .booking-modal {
