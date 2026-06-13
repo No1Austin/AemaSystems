@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Trash2 } from "lucide-react";
 import "./AemaAI.css";
 import { sendMessageToAemaAI } from "../services/aiService";
 import PricingModal from "../components/PricingModal";
 import Navbar from "../components/Navbar";
+import { ArrowUp, Trash2, Menu } from "lucide-react";
 
 const firstQuestion =
   "Hi, I’m AEMA AI — your Business Intelligence Partner. Please be as detailed as possible. What type of business do you run, and what do you want to improve first: website, SEO, automation, sales, or business systems?";
@@ -37,6 +37,7 @@ export default function AemaAI() {
   const [isThinking, setIsThinking] = useState(false);
   const [typingMessage, setTypingMessage] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
 
   const latestBlueprint =
     messages
@@ -188,7 +189,12 @@ export default function AemaAI() {
 
   return (
     <main className="aema-ai-page">
-      <Navbar />
+      <Navbar
+  externalOpen={navOpen}
+  setExternalOpen={setNavOpen}
+  hideMobileToggle
+  className="aema-ai-navbar"
+/>
 
       <section className="aema-chat-window">
         <div className="chat-header">
@@ -200,13 +206,25 @@ export default function AemaAI() {
             </p>
           </div>
 
-        <button
-  className="clear-chat-btn"
-  onClick={() => setShowDeleteModal(true)}
+        <div className="ai-header-actions">
+  <button
+    className="clear-chat-btn"
+    onClick={() => setShowDeleteModal(true)}
+  >
+    <Trash2 size={18} />
+    <span>Clear Chat</span>
+  </button>
+
+  <button
+  className="ai-menu-btn"
+  onClick={() => setNavOpen((prev) => !prev)}
+  type="button"
 >
-  <Trash2 size={18} />
-  <span>Clear Chat</span>
+  <Menu size={22} />
 </button>
+
+</div>
+
         </div>
 
         <div className="chat-body">

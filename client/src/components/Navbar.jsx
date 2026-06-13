@@ -2,8 +2,17 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CalendarDays, Flame, Menu, Sparkles, X } from "lucide-react";
 
-export default function Navbar() {
-  const [open, setOpen] = useState(false);
+export default function Navbar({
+  externalOpen,
+  setExternalOpen,
+  hideMobileToggle = false,
+  className = "",
+}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const open = externalOpen ?? internalOpen;
+  const setOpen = setExternalOpen ?? setInternalOpen;
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -15,6 +24,7 @@ export default function Navbar() {
 
     if (location.pathname !== "/") {
       navigate("/");
+
       setTimeout(() => {
         document.getElementById(id)?.scrollIntoView({
           behavior: "smooth",
@@ -30,7 +40,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-50 px-4 py-4">
+    <header className={`fixed left-0 right-0 top-0 z-50 px-4 py-4 ${className}`}>
       <nav className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-[#050816]/80 px-5 py-3 text-white shadow-2xl backdrop-blur-xl">
         <div className="flex items-center justify-between">
           <Link to="/" onClick={() => setOpen(false)}>
@@ -100,13 +110,16 @@ export default function Navbar() {
             </button>
           </div>
 
-          <button
-            onClick={() => setOpen((prev) => !prev)}
-            aria-label="Toggle navigation menu"
-            className="inline-flex rounded-xl border border-white/10 bg-white/5 p-3 transition hover:bg-white/10 lg:hidden"
-          >
-            {open ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          {!hideMobileToggle && (
+            <button
+              onClick={() => setOpen((prev) => !prev)}
+              aria-label="Toggle navigation menu"
+              className="inline-flex rounded-xl border border-white/10 bg-white/5 p-3 transition hover:bg-white/10 lg:hidden"
+              type="button"
+            >
+              {open ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          )}
         </div>
 
         {open && (
