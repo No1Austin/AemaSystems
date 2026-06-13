@@ -43,8 +43,11 @@ export default function AemaAI() {
       .reverse()
       .find((msg) => msg.blueprint)?.blueprint || {};
 
+  const isBusy = isThinking || Boolean(typingMessage);
+
   const typeAssistantReply = ({ content, blueprint }) => {
     let index = 0;
+    const safeContent = content || "I could not generate a response.";
 
     if (typingIntervalRef.current) {
       clearInterval(typingIntervalRef.current);
@@ -61,11 +64,11 @@ export default function AemaAI() {
 
       setTypingMessage({
         role: "assistant",
-        content: content.slice(0, index),
+        content: safeContent.slice(0, index),
         blueprint: null,
       });
 
-      if (index >= content.length) {
+      if (index >= safeContent.length) {
         clearInterval(typingIntervalRef.current);
         typingIntervalRef.current = null;
 
@@ -75,7 +78,7 @@ export default function AemaAI() {
           ...prev,
           {
             role: "assistant",
-            content,
+            content: safeContent,
             blueprint: blueprint || null,
           },
         ]);
@@ -89,9 +92,29 @@ export default function AemaAI() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({
-      behavior: "smooth",
+      behavior: "auto",
     });
   }, [messages, isThinking, typingMessage]);
+
+  useEffect(() => {
+    const hideTawkWidget = () => {
+      if (window.Tawk_API?.hideWidget) {
+        window.Tawk_API.hideWidget();
+      }
+    };
+
+    hideTawkWidget();
+
+    const interval = setInterval(hideTawkWidget, 500);
+
+    return () => {
+      clearInterval(interval);
+
+      if (window.Tawk_API?.showWidget) {
+        window.Tawk_API.showWidget();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -128,11 +151,11 @@ export default function AemaAI() {
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || isThinking || typingMessage) return;
+    if (!input.trim() || isBusy) return;
 
     const userMessage = {
       role: "user",
-      content: input,
+      content: input.trim(),
     };
 
     const updatedMessages = [...messages, userMessage];
@@ -148,8 +171,8 @@ export default function AemaAI() {
         setIsThinking(false);
 
         typeAssistantReply({
-          content: result.reply,
-          blueprint: result.blueprint || null,
+          content: result?.reply,
+          blueprint: result?.blueprint || null,
         });
       }, 900);
     } catch (error) {
@@ -278,7 +301,7 @@ export default function AemaAI() {
           <div ref={chatEndRef} />
         </div>
 
-        {messages.length <= 1 && !isThinking && !typingMessage && (
+        {messages.length <= 1 && !isBusy && (
           <div className="suggestions">
             <button
               onClick={() => setInput("I need more customers for my business")}
@@ -320,15 +343,14 @@ export default function AemaAI() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Message AEMA AI..."
-            disabled={isThinking || Boolean(typingMessage)}
+            placeholder={isBusy ? "AEMA is responding..." : "Message AEMA AI..."}
           />
 
           <button
             onClick={sendMessage}
             aria-label="Send message"
             type="button"
-            disabled={isThinking || Boolean(typingMessage)}
+            disabled={isBusy}
           >
             <ArrowUp size={20} strokeWidth={3} />
           </button>

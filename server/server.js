@@ -12,10 +12,20 @@ dotenv.config();
 const app = express();
 
 const allowedOrigins = [
-  "https://aema-systems.vercel.app",
   "http://localhost:5173",
-    "http://localhost:5174",
+  "http://localhost:5174",
+  "https://aemasystems.com",
+  "https://www.aemasystems.com",
 ];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+
+app.options("*", cors());
 
 app.use(
   cors({
