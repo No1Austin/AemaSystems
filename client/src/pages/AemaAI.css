@@ -872,10 +872,34 @@
   justify-content: space-between;
   gap: 18px;
 }
-@media (max-width: 640px) {
+
+  @media (max-width: 640px) {
   .aema-ai-navbar {
-    display: none !important;
+    display: block !important;
+    top: 112px;
+    padding: 0 20px;
   }
+
+  .aema-ai-navbar nav > div:first-child {
+    display: none;
+  }
+
+  .aema-ai-navbar nav {
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .aema-ai-navbar nav > div:nth-child(2) {
+    margin-top: 0;
+    border-top: 0;
+    border-radius: 20px;
+    background: #071224;
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 16px;
+  }
+}
 
   .chat-header {
     display: flex;
@@ -911,4 +935,3 @@
   .clear-chat-btn span {
     display: none;
   }
-}

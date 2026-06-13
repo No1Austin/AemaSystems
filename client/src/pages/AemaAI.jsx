@@ -215,7 +215,7 @@ export default function AemaAI() {
     <span>Clear Chat</span>
   </button>
 
-  <button
+<button
   className="ai-menu-btn"
   onClick={() => setNavOpen((prev) => !prev)}
   type="button"
