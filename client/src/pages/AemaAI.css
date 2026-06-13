@@ -1,0 +1,606 @@
+.aema-ai-page {
+  min-height: 100vh;
+  padding: 120px 20px 40px;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.55), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.35), transparent 35%),
+    #020617;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aema-chat-window {
+  width: 100%;
+  max-width: 1000px;
+  height: 78vh;
+  border-radius: 28px;
+  overflow: hidden;
+  background: rgba(5, 8, 22, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 30px 100px rgba(37, 99, 235, 0.35);
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(20px);
+}
+
+.chat-header {
+  padding: 22px 26px;
+  background: rgba(15, 23, 42, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+.chat-brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.brand-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-header h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.chat-header p {
+  margin: 4px 0 0;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.online-dot {
+  color: #22c55e;
+  font-size: 14px;
+}
+
+.chat-body {
+  flex: 1;
+  padding: 28px;
+  
+  overflow-y: auto;
+}
+
+.chat-message {
+  max-width: 75%;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  border-radius: 20px;
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.chat-message.assistant {
+  background: #0f172a;
+  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.chat-message.user {
+  margin-left: auto;
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  color: white;
+}
+
+.typing::after {
+  content: "|";
+  animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.suggestions {
+  display: flex;
+  gap: 10px;
+  padding: 0 24px 18px;
+  flex-wrap: wrap;
+}
+
+.suggestions button {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #dbeafe;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.chat-input-area {
+  display: flex;
+  gap: 12px;
+  padding: 22px;
+  background: rgba(15, 23, 42, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-input-area input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: #020617;
+  color: white;
+  font-size: 15px;
+}
+
+.chat-input-area input::placeholder {
+  color: #64748b;
+}
+
+.chat-input-area button {
+  width: 58px;
+  height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #38bdf8
+  );
+
+  color: white;
+  cursor: pointer;
+
+  box-shadow:
+    0 0 25px rgba(56, 189, 248, 0.35);
+
+  transition: all 0.25s ease;
+}
+
+.chat-input-area button:hover {
+  transform: translateY(-2px) scale(1.05);
+
+  box-shadow:
+    0 0 35px rgba(56, 189, 248, 0.5);
+}
+
+.chat-input-area button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.aema-logo {
+  width: 70px;
+  height: auto;
+  object-fit: contain;
+}
+
+.chat-header h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  color: white;
+}
+
+.chat-header p {
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+.brand-tagline {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.aema-logo {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  filter: drop-shadow(
+    0 0 18px rgba(56, 189, 248, 0.35)
+  );
+}
+
+.blueprint-card {
+  margin-top: 16px;
+  padding: 22px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.96));
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  box-shadow: 0 20px 60px rgba(37, 99, 235, 0.18);
+}
+
+.blueprint-card h2 {
+  margin: 0 0 18px;
+  color: white;
+  font-size: 22px;
+}
+
+.blueprint-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.blueprint-grid div {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.blueprint-grid span {
+  display: block;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.blueprint-grid strong {
+  color: white;
+  font-size: 14px;
+}
+
+.blueprint-card h3 {
+  margin: 18px 0 10px;
+  color: #dbeafe;
+  font-size: 16px;
+}
+
+.blueprint-card ul {
+  padding-left: 18px;
+  margin: 0;
+}
+
+.blueprint-card li {
+  margin-bottom: 8px;
+  color: #e5e7eb;
+}
+
+.service-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.service-tags span {
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.25);
+  color: #bfdbfe;
+  font-size: 13px;
+}
+
+.blueprint-cta {
+  margin-top: 20px;
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  .blueprint-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.pricing-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.pricing-modal {
+  width: min(1200px, 95%);
+  background: #020617;
+  border-radius: 24px;
+  padding: 40px;
+  position: relative;
+}
+
+.pricing-modal h2 {
+  color: white;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.pricing-cards {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 20px;
+}
+
+.pricing-card {
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px;
+  padding: 24px;
+  color: white;
+}
+
+.pricing-card h1 {
+  color: #38bdf8;
+}
+
+.pricing-card button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.featured {
+  border: 2px solid #38bdf8;
+  transform: scale(1.03);
+}
+
+.badge {
+  background: #38bdf8;
+  color: black;
+  padding: 6px 10px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.minimum {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.close-btn {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.clear-chat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.clear-chat-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fecaca;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.booking-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 20px;
+  @keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+
+  14% {
+    transform: scale(1.08);
+  }
+
+  28% {
+    transform: scale(1);
+  }
+
+  42% {
+    transform: scale(1.08);
+  }
+
+  70% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.growth-heartbeat {
+  animation: heartbeat 2s infinite;
+}
+}
+
+.booking-modal {
+ width: min(480px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #020617;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  padding: 22px;
+  color: white;
+  position: relative;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.45);
+}
+
+
+.booking-close {
+  position: absolute;
+  right: 20px;
+  top: 18px;
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.locked-plan {
+  margin: 20px 0;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.locked-plan span {
+  display: block;
+  color: #93c5fd;
+  font-size: 13px;
+  margin-bottom: 4px;
+  margin: 14px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+
+}
+
+.locked-plan strong {
+  font-size: 18px;
+}
+
+.booking-form {
+  display: grid;
+  gap: 14px;
+}
+
+.booking-form label {
+  display: grid;
+  gap: 6px;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.booking-form input,
+.booking-form textarea {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  padding: 13px 14px;
+  outline: none;
+}
+
+.booking-form textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.booking-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.booking-form button {
+  margin-top: 8px;
+  border: none;
+  border-radius: 16px;
+  background: #2563eb;
+  color: white;
+  padding: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.thinking-dots {
+  display: inline-block;
+  animation: dotsPulse 1.2s infinite;
+}
+
+@keyframes dotsPulse {
+  0% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
+}
+
+.chat-message.typing p::after {
+  content: "|";
+  margin-left: 3px;
+  animation: cursorBlink 0.8s infinite;
+}
+
+@keyframes cursorBlink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes emberPulse {
+  0% {
+    box-shadow:
+      0 0 12px rgba(239, 68, 68, 0.35),
+      0 0 24px rgba(249, 115, 22, 0.2);
+  }
+
+  50% {
+    box-shadow:
+      0 0 22px rgba(239, 68, 68, 0.55),
+      0 0 45px rgba(249, 115, 22, 0.35);
+  }
+
+  100% {
+    box-shadow:
+      0 0 12px rgba(239, 68, 68, 0.35),
+      0 0 24px rgba(249, 115, 22, 0.2);
+  }
+}
+
+.community-fire {
+  animation: emberPulse 2.5s ease-in-out infinite;
+}

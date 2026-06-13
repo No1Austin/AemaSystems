@@ -1,0 +1,28 @@
+.blueprint-page {
+  min-height: 100vh;
+  padding: 40px;
+}
+
+.blueprint-hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.blueprint-form {
+  max-width: 800px;
+  margin: auto;
+}
+
+.question-card {
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.result-card {
+  margin-top: 40px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #f5f5f5;
+}

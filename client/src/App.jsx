@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
+import GrowthBlueprint from "./pages/GrowthBlueprint";
+import AemaAI from "./pages/AemaAI";
 import SoftwareDevelopment from "./services/software-development";
 import AIAutomation from "./services/ai-automation";
 import BusinessSystems from "./services/business-systems";
@@ -13,13 +15,15 @@ import Healthcare from "./industries/healthcare";
 import Education from "./industries/education";
 import Retail from "./industries/retail";
 import Startups from "./industries/startups";
-
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+<Route path="/ai" element={<AemaAI />} />
+        <Route path="/growth-blueprint" element={<GrowthBlueprint />} />
 
         <Route
           path="/services/software-development"
@@ -37,8 +41,9 @@ export default function App() {
 
         <Route path="/industries/healthcare" element={<Healthcare />} />
         <Route path="/industries/education" element={<Education />} />
-        <Route path="/industries/retail" element={<Retail/>} />
+        <Route path="/industries/retail" element={<Retail />} />
         <Route path="/industries/startups" element={<Startups />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
       </Routes>
     </BrowserRouter>
   );

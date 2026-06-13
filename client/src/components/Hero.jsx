@@ -21,6 +21,7 @@ export default function Hero() {
     <section
       id="home"
       className="relative min-h-screen overflow-hidden bg-[#020617] px-6 pt-32 text-white md:px-12 lg:px-20"
+      style={{ fontFamily: '"Geist", sans-serif' }}
     >
       <div className="absolute inset-0">
         <img
@@ -45,7 +46,7 @@ export default function Hero() {
             Technology • Automation • Growth
           </div>
 
-          <h1 className="font-black uppercase leading-[0.86] tracking-[-0.06em]">
+          <h1 className="font-bold uppercase leading-[0.86] tracking-[-0.06em]">
             <span className="block text-4xl text-white md:text-5xl lg:text-6xl">
               From Ideas
             </span>
@@ -59,7 +60,7 @@ export default function Hero() {
             </span>
           </h1>
 
-          <p className="mt-6 max-w-md text-sm leading-7 text-slate-300 md:text-base">
+          <p className="mt-6 max-w-md text-sm font-normal leading-7 text-slate-300 md:text-base">
             AEMA Systems transforms ideas into intelligent software, AI
             automation, business systems, and digital platforms that help
             organizations operate smarter, scale faster, and grow with
@@ -69,7 +70,7 @@ export default function Hero() {
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
             <a
               href="#booking"
-              className="inline-flex items-center justify-center gap-3 rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-bold text-white transition hover:bg-blue-500"
+              className="inline-flex items-center justify-center gap-3 rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-500"
             >
               <CalendarDays size={18} />
               Book a Consultation
@@ -78,7 +79,7 @@ export default function Hero() {
 
             <a
               href="#aema-ai"
-              className="inline-flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/10"
+              className="inline-flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10"
             >
               <Sparkles size={18} />
               Use AEMA AI
@@ -103,8 +104,10 @@ export default function Hero() {
               </div>
 
               <div>
-                <h3 className="text-sm font-bold text-white">{title}</h3>
-                <p className="mt-1 text-xs leading-5 text-slate-400">{text}</p>
+                <h3 className="text-sm font-semibold text-white">{title}</h3>
+                <p className="mt-1 text-xs font-normal leading-5 text-slate-400">
+                  {text}
+                </p>
               </div>
             </div>
           ))}
