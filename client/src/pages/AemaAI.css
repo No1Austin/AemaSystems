@@ -935,3 +935,53 @@
   .clear-chat-btn span {
     display: none;
   }
+@media (max-width: 640px) {
+  .pricing-overlay {
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    padding: 14px !important;
+    overflow-y: auto !important;
+  }
+
+  .pricing-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+    padding: 22px 14px !important;
+    border-radius: 24px !important;
+  }
+
+  .pricing-cards {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    width: 100% !important;
+  }
+
+  .pricing-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: auto !important;
+    padding: 22px 18px !important;
+    border-radius: 22px !important;
+    transform: none !important;
+  }
+
+  .pricing-card.featured {
+    transform: none !important;
+  }
+
+  .pricing-card button {
+    width: 100% !important;
+  }
+
+  .badge {
+    position: static !important;
+    display: inline-flex !important;
+    width: fit-content !important;
+    margin-bottom: 12px !important;
+  }
+}
