@@ -118,7 +118,7 @@ export default function PaymentSuccess() {
   const planName = payment.planLabel || payment.plan;
 
   return (
-    <main className="min-h-screen bg-[#020617] text-white px-6 py-24">
+    <main className="payment-success-page min-h-screen bg-[#020617] text-white px-6 py-24">
       <section className="mx-auto max-w-5xl">
         <div className="text-center rounded-3xl border border-white/10 bg-white/5 p-10 shadow-2xl mb-8">
           <h1 className="text-4xl font-bold mb-4">Payment Successful 🎉</h1>

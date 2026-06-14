@@ -4,3 +4,52 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
   cursor: pointer;
 }
+
+@media (max-width: 640px) {
+  .payment-success-page,
+  .payment-success-page * {
+    box-sizing: border-box;
+  }
+
+  .payment-success-page {
+    width: 100%;
+    overflow-x: hidden;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .payment-success-page section,
+  .payment-success-page div,
+  .payment-success-page ul,
+  .payment-success-page li {
+    max-width: 100% !important;
+  }
+
+  .payment-success-page .report-mobile-card {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .payment-success-page .growth-projection-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .payment-success-page p,
+  .payment-success-page li {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .payment-success-page .report-actions {
+    flex-direction: column !important;
+  }
+
+  .payment-success-page .report-actions button,
+  .payment-success-page .report-actions a {
+    width: 100% !important;
+    text-align: center;
+    justify-content: center;
+  }
+}
