@@ -321,20 +321,34 @@ export default function PaymentSuccess() {
     </h3>
 
     <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-      <p className="mb-4">
-        <strong>Current Score:</strong>{" "}
-        {report.growthProjection.currentScore}
-      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="flex flex-col items-center">
+          <span className="text-lg font-bold text-slate-300">
+            {report.growthProjection.currentScore}
+          </span>
+          <span className="text-sm text-slate-400">
+            Current Score
+          </span>
+        </div>
 
-      <p className="mb-4">
-        <strong>Projected Score:</strong>{" "}
-        {report.growthProjection.projectedRange}
-      </p>
+        <div className="flex flex-col items-center">
+          <span className="text-lg font-bold text-slate-300">
+            {report.growthProjection.projectedRange}
+          </span>
+          <span className="text-sm text-slate-400">
+            Projected Range
+          </span>
+        </div>
 
-      <p className="mb-4">
-        <strong>Timeframe:</strong>{" "}
-        {report.growthProjection.timeframe}
-      </p>
+        <div className="flex flex-col items-center">
+          <span className="text-lg font-bold text-slate-300">
+            {report.growthProjection.timeframe}
+          </span>
+          <span className="text-sm text-slate-400">
+            Timeframe
+          </span>
+        </div>
+      </div>
 
       <p className="text-slate-300">
         {report.growthProjection.statement}
@@ -366,7 +380,8 @@ export default function PaymentSuccess() {
           key={index}
           className="rounded-2xl border border-white/10 bg-white/5 p-5"
         >
-          <p className="text-slate-300 italic">
+          <p className="text-slate-300 leading-7">
+            
             "{note}"
           </p>
         </div>
@@ -381,8 +396,8 @@ export default function PaymentSuccess() {
           key={index}
           className="rounded-2xl border border-white/10 bg-white/5 p-5"
         >
-          <div className="flex flex-wrap gap-2 mb-3">
-            <span className="rounded-full bg-red-500/20 px-3 py-1 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+            <span className="rounded-xl bg-red-500/20 px-4 py-2 text-center text-sm">
               Impact: {item.impact}
             </span>
 
@@ -417,7 +432,7 @@ export default function PaymentSuccess() {
               <ExpertAnalysis analysis={report.expertAnalysis} />
             )}
 
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
               <button
                 onClick={downloadReport}
                 className="rounded-xl bg-blue-600 px-6 py-3 font-semibold"
@@ -535,17 +550,17 @@ function ExpertAnalysis({ analysis }) {
               >
                 <h5 className="font-bold mb-2">{gap.area}</h5>
 
-                <p className="text-slate-300">
+                <div className="space-y-4">
                   <strong>Current State:</strong> {gap.currentState}
-                </p>
+                </div>
 
-                <p className="text-slate-300">
+                <div className="space-y-4">
                   <strong>Desired State:</strong> {gap.desiredState}
-                </p>
+                </div>
 
-                <p className="text-slate-300">
+                <div className="space-y-4">
                   <strong>Gap:</strong> {gap.gap}
-                </p>
+                </div>
               </div>
             ))}
           </div>
