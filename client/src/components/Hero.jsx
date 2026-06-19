@@ -78,13 +78,17 @@ export default function Hero() {
             </a>
 
             <a
-              href="#aema-ai"
-              className="inline-flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10"
-            >
-              <Sparkles size={18} />
-              Use AEMA AI
-              <ArrowRight size={18} />
-            </a>
+  href="https://aemasystems.com/ai"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="inline-flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10"
+>
+  <Sparkles size={18} />
+  AEMA AI
+  <ArrowRight size={18} />
+</a>
+
+
           </div>
         </motion.div>
 
