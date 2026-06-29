@@ -12,12 +12,6 @@ dotenv.config();
 
 const app = express();
 
-/*
-|--------------------------------------------------------------------------
-| Allowed Origins
-|--------------------------------------------------------------------------
-*/
-
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
@@ -25,11 +19,28 @@ const allowedOrigins = [
   "https://www.aemasystems.com",
 ];
 
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+
+    const isAllowed =
+      allowedOrigins.includes(origin) || origin.endsWith(".vercel.app");
+
+    if (isAllowed) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+};
+
 /*
 |--------------------------------------------------------------------------
 | Stripe Webhook
 |--------------------------------------------------------------------------
-| Stripe requires the raw body BEFORE express.json()
+| Stripe requires raw body BEFORE express.json()
 */
 
 app.use(
@@ -45,30 +56,8 @@ app.use(
 |--------------------------------------------------------------------------
 */
 
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS",
-    ],
-  })
-);
-
-app.options("*", cors());
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 /*
 |--------------------------------------------------------------------------
@@ -109,13 +98,9 @@ app.get("/health", (req, res) => {
 */
 
 app.use("/api/ai", aiRoutes);
-
 app.use("/api/bookings", bookingRoutes);
-
 app.use("/api/blueprint", blueprintRoutes);
-
 app.use("/api/payments", paymentRoutes);
-
 app.use("/api/reports", reportRoutes);
 
 /*
