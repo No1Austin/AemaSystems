@@ -8,6 +8,13 @@ const __dirname = path.dirname(__filename);
 
 const logoPath = path.join(__dirname, "../assets/aema-logo.png");
 
+const safeText = (value) => {
+  if (Array.isArray(value)) return value.join(", ");
+  if (value === null || value === undefined || value === "") return "Not provided";
+  if (typeof value === "object") return value.title || value.summary || JSON.stringify(value);
+  return String(value);
+};
+
 export const downloadReportPdf = async (req, res) => {
   try {
     const { report } = req.body;
@@ -22,6 +29,7 @@ export const downloadReportPdf = async (req, res) => {
     const doc = new PDFDocument({
       size: "A4",
       margin: 50,
+      bufferPages: true,
     });
 
     res.setHeader("Content-Type", "application/pdf");
@@ -39,24 +47,33 @@ export const downloadReportPdf = async (req, res) => {
 
     const addLogo = () => {
       if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, 50, 35, {
-          fit: [110, 55],
-        });
+        doc.image(logoPath, 50, 35, { fit: [110, 55] });
       } else {
         doc.fontSize(18).fillColor(blue).text("AEMA SYSTEMS", 50, 45);
       }
     };
 
+    const ensureSpace = (space = 90) => {
+      if (doc.y + space > doc.page.height - 60) {
+        doc.addPage();
+        addLogo();
+        doc.moveDown(4);
+      }
+    };
+
     const addTitle = (title) => {
-      doc.moveDown(1);
+      ensureSpace(60);
+      doc.moveDown(0.7);
       doc.fontSize(16).fillColor(blue).text(title);
       doc.moveDown(0.4);
     };
 
-    const addText = (text) => {
-      doc.fontSize(11).fillColor(dark).text(text || "Not provided", {
+    const addText = (value) => {
+      ensureSpace(45);
+      doc.fontSize(11).fillColor(dark).text(safeText(value), {
         lineGap: 4,
       });
+      doc.moveDown(0.35);
     };
 
     const addList = (title, items = []) => {
@@ -65,24 +82,22 @@ export const downloadReportPdf = async (req, res) => {
       addTitle(title);
 
       items.forEach((item) => {
-        doc.fontSize(11).fillColor(dark).text(`• ${item}`, {
+        ensureSpace(45);
+
+        const value =
+          typeof item === "object"
+            ? item.title || item.opportunity || item.rationale || JSON.stringify(item)
+            : item;
+
+        doc.fontSize(11).fillColor(dark).text(`• ${safeText(value).replace(/[^\x20-\x7E]/g, "")}`, {
           indent: 12,
           lineGap: 5,
         });
       });
     };
 
-    const checkPageSpace = () => {
-      if (doc.y > 720) {
-        doc.addPage();
-        addLogo();
-        doc.moveDown(4);
-      }
-    };
-
     const snapshot = report.businessSnapshot || {};
 
-    // COVER
     addLogo();
 
     doc.moveDown(5);
@@ -90,7 +105,9 @@ export const downloadReportPdf = async (req, res) => {
     doc
       .fontSize(26)
       .fillColor(blue)
-      .text("AEMA Growth Blueprint Report", { align: "center" });
+      .text(report.title || "AEMA Growth Blueprint Report", {
+        align: "center",
+      });
 
     doc.moveDown(0.5);
 
@@ -102,7 +119,10 @@ export const downloadReportPdf = async (req, res) => {
     doc.moveDown(2);
 
     doc.fontSize(12).fillColor(dark);
-    doc.text(`Business: ${snapshot.businessType || "Not provided"}`, {
+    doc.text(`Business: ${snapshot.businessName || snapshot.businessType || "Not provided"}`, {
+      align: "center",
+    });
+    doc.text(`Industry: ${snapshot.industry || "Not provided"}`, {
       align: "center",
     });
     doc.text(`Goal: ${snapshot.goal || "Not provided"}`, {
@@ -131,48 +151,50 @@ export const downloadReportPdf = async (req, res) => {
       .fillColor(grey)
       .text("Business Growth Score", { align: "center" });
 
-    // BODY
     doc.addPage();
     addLogo();
     doc.moveDown(4);
 
     addTitle("Executive Summary");
-    addText(report.executiveSummary || "No executive summary available.");
+    if (Array.isArray(report.executiveSummary)) {
+      report.executiveSummary.forEach(addText);
+    } else {
+      addText(report.executiveSummary || "No executive summary available.");
+    }
 
     addTitle("Business Snapshot");
     addText(`Business Type: ${snapshot.businessType || "Not provided"}`);
+    addText(`Industry: ${snapshot.industry || "Not provided"}`);
+    addText(`Main Offer: ${snapshot.mainOffer || "Not provided"}`);
     addText(`Goal: ${snapshot.goal || "Not provided"}`);
     addText(`Lead Source: ${snapshot.leadSource || "Not provided"}`);
     addText(`Website Status: ${snapshot.websiteStatus || "Not provided"}`);
-
     if (snapshot.websiteUrl) addText(`Website URL: ${snapshot.websiteUrl}`);
     if (snapshot.biggestChallenge) addText(`Biggest Challenge: ${snapshot.biggestChallenge}`);
     if (snapshot.monthlyCustomers) addText(`Monthly Customers: ${snapshot.monthlyCustomers}`);
+    if (snapshot.monthlyRevenue) addText(`Monthly Revenue: ${snapshot.monthlyRevenue}`);
     if (snapshot.teamSize) addText(`Team Size: ${snapshot.teamSize}`);
-    if (snapshot.businessAge) addText(`Business Age: ${snapshot.businessAge}`);
+    if (snapshot.businessStage) addText(`Business Stage: ${snapshot.businessStage}`);
+    if (snapshot.salesProcess) addText(`Sales Process: ${snapshot.salesProcess}`);
+    if (snapshot.marketingChannels) addText(`Marketing Channels: ${snapshot.marketingChannels}`);
 
     addTitle("Growth Score");
     doc.fontSize(24).fillColor(sky).text(`${report.growthScore || 0}/100`);
+    addText(`Growth Potential: ${report.growthPotential || "Not provided"}`);
     addText("This score is based on the information collected from your AEMA AI assessment.");
 
-    const sections = [
-      ["Strengths", report.strengths],
-      ["Weaknesses", report.weaknesses],
-      ["Opportunities", report.opportunities],
-      ["Risks", report.risks],
-      ["Website Analysis", report.websiteAnalysis],
-      ["Marketing Analysis", report.marketingAnalysis],
-      ["Automation Analysis", report.automationAnalysis],
-      ["Business Systems Analysis", report.businessSystemsAnalysis],
-      ["30-Day Action Plan", report.actionPlan30Days],
-      ["Recommended AEMA Services", report.recommendedServices],
-      ["Next Steps", report.nextSteps],
-    ];
-
-    sections.forEach(([title, items]) => {
-      checkPageSpace();
-      addList(title, items);
-    });
+    addList("Scoring Notes", report.scoringNotes);
+    addList("Strengths", report.strengths);
+    addList("Weaknesses", report.weaknesses);
+    addList("Opportunities", report.opportunities);
+    addList("Risks", report.risks);
+    addList("Website Analysis", report.websiteAnalysis);
+    addList("Marketing Analysis", report.marketingAnalysis);
+    addList("Automation Analysis", report.automationAnalysis);
+    addList("Business Systems Analysis", report.businessSystemsAnalysis);
+    addList("30-Day Action Plan", report.actionPlan30Days);
+    addList("Recommended AEMA Services", report.recommendedServices);
+    addList("Next Steps", report.nextSteps);
 
     doc.end();
   } catch (error) {
@@ -181,6 +203,7 @@ export const downloadReportPdf = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Could not generate PDF.",
+      error: error.message,
     });
   }
 };

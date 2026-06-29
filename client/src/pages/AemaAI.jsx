@@ -6,7 +6,7 @@ import Navbar from "../components/Navbar";
 import { ArrowUp, Trash2, Menu } from "lucide-react";
 
 const firstQuestion =
-  "Hi, I’m AEMA AI — your Business Intelligence Partner. Please be as detailed as possible. What type of business do you run, and what do you want to improve first: website, SEO, automation, sales, or business systems?";
+  "Hi, I'm AEMA AI — your Business Intelligence Partner. Let's start by identifying your business properly. What is the name of your business?";
 
 const getInitialMessages = () => {
   const savedMessages = localStorage.getItem("aema_ai_messages");
@@ -127,27 +127,26 @@ export default function AemaAI() {
   }, []);
 
   const clearChat = () => {
-  if (typingIntervalRef.current) {
-    clearInterval(typingIntervalRef.current);
-    typingIntervalRef.current = null;
-  }
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
 
-  localStorage.removeItem("aema_ai_messages");
-  setInput("");
-  setShowPricing(false);
-  setIsThinking(false);
-  setTypingMessage(null);
+    localStorage.removeItem("aema_ai_messages");
+    setInput("");
+    setShowPricing(false);
+    setIsThinking(false);
+    setTypingMessage(null);
 
-  setMessages([
-    {
-      role: "assistant",
-      content: firstQuestion,
-    },
-  ]);
+    setMessages([
+      {
+        role: "assistant",
+        content: firstQuestion,
+      },
+    ]);
 
-  setShowDeleteModal(false);
-};
-
+    setShowDeleteModal(false);
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || isBusy) return;
@@ -190,11 +189,11 @@ export default function AemaAI() {
   return (
     <main className="aema-ai-page">
       <Navbar
-  externalOpen={navOpen}
-  setExternalOpen={setNavOpen}
-  hideMobileToggle
-  className="aema-ai-navbar"
-/>
+        externalOpen={navOpen}
+        setExternalOpen={setNavOpen}
+        hideMobileToggle
+        className="aema-ai-navbar"
+      />
 
       <section className="aema-chat-window">
         <div className="chat-header">
@@ -206,30 +205,29 @@ export default function AemaAI() {
             </p>
           </div>
 
-        <div className="ai-header-actions">
-  <button
-    className="clear-chat-btn"
-    onClick={() => setShowDeleteModal(true)}
-  >
-    <Trash2 size={18} />
-    <span>Clear Chat</span>
-  </button>
+          <div className="ai-header-actions">
+            <button
+              className="clear-chat-btn"
+              onClick={() => setShowDeleteModal(true)}
+              type="button"
+            >
+              <Trash2 size={18} />
+              <span>Clear Chat</span>
+            </button>
 
-<button
-  className="ai-menu-btn"
-  onClick={() => setNavOpen((prev) => !prev)}
-  type="button"
->
-  <Menu size={22} />
-</button>
-
-</div>
-
+            <button
+              className="ai-menu-btn"
+              onClick={() => setNavOpen((prev) => !prev)}
+              type="button"
+            >
+              <Menu size={22} />
+            </button>
+          </div>
         </div>
 
         <div className="chat-body">
           {messages.map((msg, index) => (
-            <div key={index} className={`chat-message ${msg.role}`}>
+            <div key={index} className={"chat-message " + msg.role}>
               <p>{msg.content}</p>
 
               {msg.blueprint && (
@@ -361,7 +359,11 @@ export default function AemaAI() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage();
+              }
+            }}
             placeholder={isBusy ? "AEMA is responding..." : "Message AEMA AI..."}
           />
 
@@ -383,32 +385,28 @@ export default function AemaAI() {
       />
 
       {showDeleteModal && (
-  <div className="delete-modal-overlay">
-    <div className="delete-modal">
-      <h3>Delete Chat?</h3>
+        <div className="delete-modal-overlay">
+          <div className="delete-modal">
+            <h3>Delete Chat?</h3>
 
-      <p>
-        This will permanently remove your AEMA conversation history.
-      </p>
+            <p>This will permanently remove your AEMA conversation history.</p>
 
-      <div className="delete-modal-actions">
-        <button
-          className="cancel-btn"
-          onClick={() => setShowDeleteModal(false)}
-        >
-          Cancel
-        </button>
+            <div className="delete-modal-actions">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowDeleteModal(false)}
+                type="button"
+              >
+                Cancel
+              </button>
 
-        <button
-          className="delete-btn"
-          onClick={clearChat}
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+              <button className="delete-btn" onClick={clearChat} type="button">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

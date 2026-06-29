@@ -1,449 +1,393 @@
-const normalize = (value = "") => value.toLowerCase().trim();
+// server/services/profileStateEngine.js
 
-const yesAnswers = ["yes", "yeah", "yep", "yes i do", "we do"];
-const noAnswers = [
-  "no",
-  "nope",
-  "not yet",
-  "no i don't",
-  "no i dont",
-  "we don't",
-  "we dont",
-];
+import { detectExpectedFieldFromAssistant } from "./conversation/questionDetector.js";
+import { buildConversationalReply } from "./conversationCoach.js";
+import {
+  EMPTY_BUSINESS_PROFILE,
+  REQUIRED_BLUEPRINT_FIELDS,
+} from "./businessProfileSchema.js";
 
-const invalidShortAnswers = ["yes", "no", "ok", "okay", "maybe", "not sure"];
+const normalize = (value = "") => String(value || "").toLowerCase().trim();
 
-const hasWebsiteUrl = (text) =>
-  /(https?:\/\/[^\s]+|www\.[^\s]+|[a-z0-9-]+\.(com|ca|net|org|co|io|app|dev|ai|site|online|store|biz|info)[^\s]*)/i.test(
-    text
-  );
-
-const extractWebsiteUrl = (text) => {
-  const match = text.match(
-    /(https?:\/\/[^\s]+|www\.[^\s]+|[a-z0-9-]+\.(com|ca|net|org|co|io|app|dev|ai|site|online|store|biz|info)[^\s]*)/i
-  );
-
-  return match ? match[0] : null;
+const hasAny = (value = "", words = []) => {
+  const clean = normalize(value);
+  return words.some((word) => clean.includes(normalize(word)));
 };
 
-const getInitialProfile = () => ({
-  businessType: null,
-  goal: null,
-  leadSource: null,
-  serviceLocation: null,
-  websiteStatus: null,
-  websiteUrl: null,
+const isEmpty = (value) =>
+  value === null ||
+  value === undefined ||
+  value === "" ||
+  (Array.isArray(value) && value.length === 0);
 
-  marketingChannels: null,
-  salesProcess: null,
-  targetCustomers: null,
-  mainOffer: null,
+const titleCase = (value = "") => {
+  const clean = String(value || "").trim();
+  if (!clean) return null;
 
-  automationNeed: null,
-  biggestChallenge: null,
-  monthlyCustomers: null,
-  teamSize: null,
-  businessAge: null,
-  websiteGoal: null,
-  
-});
-
-const getCurrentStep = (profile) => {
-  if (!profile.businessType) return "businessType";
-  if (!profile.goal) return "goal";
-  if (!profile.leadSource) return "leadSource";
-  if (!profile.serviceLocation) return "serviceLocation";
-  if (!profile.websiteStatus) return "websiteStatus";
-  if (profile.websiteStatus === "Has Website" && !profile.websiteUrl) {
-    return "websiteUrl";
-  }
-
-  if (!profile.marketingChannels) return "marketingChannels";
-  if (!profile.salesProcess) return "salesProcess";
-  if (!profile.targetCustomers) return "targetCustomers";
-  if (!profile.mainOffer) return "mainOffer";
-
-  if (!profile.automationNeed) return "automationNeed";
-  if (!profile.biggestChallenge) return "biggestChallenge";
-  if (!profile.monthlyCustomers) return "monthlyCustomers";
-  if (!profile.teamSize) return "teamSize";
-  if (!profile.businessAge) return "businessAge";
-
-  if (profile.websiteStatus === "Has Website" && !profile.websiteGoal) {
-    return "websiteGoal";
-  }
-
-  return "ready";
+  return clean
+    .split(/\s+/)
+    .map((word) => {
+      if (word.length <= 2) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
 };
 
-const questions = {
-  businessType:
-    "What type of business do you run? Please describe it clearly. Example: clothing business, cleaning company, restaurant, salon, or online store.",
+const cleanBusinessName = (value = "") => {
+  const clean = String(value || "")
+    .replace(/[?.!,;:]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  goal:
-    "What do you want to improve first: getting more customers, your website, SEO, automation, sales, marketing, or business systems?",
+  if (!clean) return null;
 
-  leadSource:
-    "How do most customers currently find you: Google, social media, referrals, walk-ins, paid ads, website, or another source?",
+  const lower = normalize(clean);
+  const badValues = [
+    "yes",
+    "no",
+    "none",
+    "not yet",
+    "i need more customers",
+    "i need more customers for my business",
+    "get more customers",
+    "more customers",
+  ];
 
-  serviceLocation:
-  "What city, region, or market do you primarily serve? Example: Kitchener-Waterloo, Toronto, Lagos, or Online Worldwide.",
+  if (badValues.includes(lower)) return null;
+  if (lower.includes("need more customers")) return null;
+  if (lower.length < 2 || lower.length > 80) return null;
 
-    websiteStatus:
-    "Do you currently have a website for your business? Please answer yes or no.",
-
-  websiteUrl:
-    "Great. Please share your website link.",
-
-  marketingChannels:
-    "What marketing channels do you currently use? Example: Instagram, Facebook, TikTok, Google, flyers, referrals, WhatsApp, email, or paid ads.",
-
-  salesProcess:
-    "How do customers usually buy from you or book your service? Example: website checkout, WhatsApp, phone call, DM, booking form, walk-in, invoice, or manual follow-up.",
-
-  targetCustomers:
-    "Who are your main customers? Example: local families, students, small businesses, brides, homeowners, professionals, or online shoppers.",
-
-  mainOffer:
-    "What is your main product or service offer? Example: cleaning packages, clothing items, haircuts, food delivery, website design, consulting, or monthly service plans.",
-
-  automationNeed:
-    "What part of your business takes the most manual time right now: bookings, follow-ups, payments, emails, reports, lead management, customer messages, or something else?",
-
-  biggestChallenge:
-    "What is the single biggest challenge preventing your business from growing faster?",
-
-  monthlyCustomers:
-    "Approximately how many customers do you serve each month?",
-
-  teamSize:
-    "How many people currently work in your business?",
-
-  businessAge:
-    "How long has your business been operating?",
-
-  websiteGoal:
-    "What do you want visitors to do on your website: call, book, buy, request a quote, or contact you?",
+  return titleCase(clean);
 };
 
-const clarificationQuestions = {
-  businessType:
-    "Can you describe your business more clearly? For example: clothing store, cleaning service, restaurant, consulting, salon, or online store.",
+const detectBusinessName = (rawText = "") => {
+  const value = String(rawText || "").trim();
+  if (!value) return null;
 
-  goal:
-    "Can you rephrase your goal? Do you want more customers, better SEO, a better website, automation, more sales, stronger marketing, or better business systems?",
+  const patterns = [
+    /(?:business|company|brand|organization)\s+(?:name\s+is|is\s+called|is\s+named|called)\s+([a-zA-Z0-9&.'’\- ]{2,80})/i,
+    /(?:my|our)\s+(?:business|company|brand|organization)\s+(?:is\s+called|is\s+named|is)\s+([a-zA-Z0-9&.'’\- ]{2,80})/i,
+    /(?:it\s+is\s+called|it's\s+called|called)\s+([a-zA-Z0-9&.'’\- ]{2,80})/i,
+    /(?:i\s+run|i\s+own|we\s+run|we\s+own)\s+([a-zA-Z0-9&.'’\- ]{2,80})/i,
+  ];
 
-  leadSource:
-    "Can you expand on this? Do customers mostly come from Google, social media, referrals, walk-ins, paid ads, your website, or somewhere else?",
+  for (const pattern of patterns) {
+    const match = value.match(pattern);
+    if (match?.[1]) {
+      const name = match[1]
+        .replace(/\b(it is|and|that|where|which|because)\b.*$/i, "")
+        .trim();
 
-  serviceLocation:
-  "Can you share the city, region, or market you serve? Example: Kitchener-Waterloo, Toronto, Lagos, or Online Worldwide.",
-  
-    websiteStatus:
-    "I just want to confirm — do you currently have a website? Please answer yes or no.",
-
-  websiteUrl:
-    "Please share your website link, for example: yourbusiness.com or https://yourbusiness.com",
-
-  marketingChannels:
-    "Can you list the marketing channels you currently use? Example: Instagram, Facebook, TikTok, Google, WhatsApp, email, referrals, flyers, or paid ads.",
-
-  salesProcess:
-    "Can you explain how customers buy from you or book your service? Example: WhatsApp, website checkout, phone call, DM, booking form, walk-in, or invoice.",
-
-  targetCustomers:
-    "Can you describe who your main customers are? Example: local families, businesses, students, homeowners, brides, professionals, or online shoppers.",
-
-  mainOffer:
-    "Can you explain your main product or service? Example: clothing items, cleaning packages, food delivery, haircuts, consulting, or monthly plans.",
-
-  automationNeed:
-    "Can you explain what takes the most manual time? Example: bookings, follow-ups, payments, emails, reports, customer messages, or lead management.",
-
-  biggestChallenge:
-    "Can you expand on your biggest challenge? What is stopping the business from growing faster?",
-
-  monthlyCustomers:
-    "Please enter an approximate number of customers you serve monthly. Example: 20, 50, or 100.",
-
-  teamSize:
-    "Please enter the number of people working in the business. Example: 1, 3, or 10.",
-
-  businessAge:
-    "Please tell me how long the business has been operating. Example: 6 months, 1 year, or 3 years.",
-
-  websiteGoal:
-    "Can you clarify what you want website visitors to do: call, book, buy, request a quote, or contact you?",
-};
-
-const detectGoal = (text) => {
-  if (
-    text.includes("customer") ||
-    text.includes("client") ||
-    text.includes("lead") ||
-    text.includes("sales") ||
-    text.includes("sell") ||
-    text.includes("buyers")
-  ) {
-    return "Get More Customers";
-  }
-
-  if (text.includes("seo") || text.includes("google ranking")) {
-    return "Improve SEO";
-  }
-
-  if (text.includes("website") || text.includes("site")) {
-    return "Improve Website";
-  }
-
-  if (text.includes("automation") || text.includes("automate")) {
-    return "Automate Business";
-  }
-
-  if (text.includes("system") || text.includes("operation")) {
-    return "Improve Business Systems";
-  }
-
-  if (text.includes("marketing") || text.includes("advertising")) {
-    return "Improve Marketing";
-  }
-
-  if (text.includes("brand") || text.includes("branding")) {
-    return "Improve Branding";
+      const cleaned = cleanBusinessName(name);
+      if (cleaned) return cleaned;
+    }
   }
 
   return null;
 };
 
-const detectLeadSource = (text) => {
-  if (
-    text.includes("google ads") ||
-    text.includes("facebook ads") ||
-    text.includes("instagram ads") ||
-    text.includes("paid ads")
-  ) {
-    return "Paid Ads";
-  }
+const extractWebsiteUrl = (text = "") => {
+  const match = String(text).match(
+    /(https?:\/\/[^\s]+|www\.[^\s]+|[a-z0-9-]+\.(com|ca|net|org|co|io|app|dev|ai|site|online|store|biz|info|inc)[^\s]*)/i
+  );
 
-  if (text.includes("referral") || text.includes("word of mouth")) {
-    return "Referrals";
-  }
+  if (!match) return null;
 
-  if (
-    text.includes("social") ||
-    text.includes("instagram") ||
-    text.includes("facebook") ||
-    text.includes("tiktok") ||
-    text.includes("linkedin")
-  ) {
-    return "Social Media";
-  }
+  const url = match[0].replace(/[.,;!?]+$/, "");
+  return url.startsWith("http://") || url.startsWith("https://")
+    ? url
+    : `https://${url}`;
+};
 
-  if (text.includes("walk")) return "Walk-ins";
-  if (text.includes("google")) return "Google";
-  if (text.includes("website")) return "Website";
-  if (text.includes("whatsapp")) return "WhatsApp";
+const extractNumber = (text = "") => {
+  const match = String(text).match(/\d+/);
+  return match ? Number(match[0]) : null;
+};
+
+const detectBusinessType = (text = "") => {
+  if (hasAny(text, ["childcare", "daycare", "child care", "elder care", "senior care", "care service"])) return "Childcare / Care Service Business";
+  if (hasAny(text, ["clothing", "fashion", "boutique", "apparel", "wear", "tailor", "tailoring"])) return "Clothing / Fashion Business";
+  if (hasAny(text, ["cleaning", "cleaner", "janitorial", "maid", "housekeeping"])) return "Cleaning Business";
+  if (hasAny(text, ["restaurant", "food", "catering", "bakery", "kitchen", "chef"])) return "Food / Restaurant Business";
+  if (hasAny(text, ["barber", "barbing", "salon", "haircut", "hair salon", "beauty", "spa", "lashes", "nails"])) return "Barbering / Salon Business";
+  if (hasAny(text, ["real estate", "realtor", "property", "rental", "airbnb"])) return "Real Estate / Property Business";
+  if (hasAny(text, ["software", "app", "seo", "automation", "digital", "ai", "saas", "dashboard", "tech", "technology"])) return "Digital / Technology Service Business";
+  if (hasAny(text, ["consulting", "consultant", "coach", "training", "advisor", "agency"])) return "Consulting / Professional Service Business";
+  if (hasAny(text, ["health", "clinic", "home care", "therapy", "wellness", "fitness", "gym"])) return "Health / Wellness Business";
+  if (hasAny(text, ["construction", "contractor", "renovation", "plumbing", "painting", "roofing", "landscaping"])) return "Construction / Home Service Business";
+  if (hasAny(text, ["school", "education", "tutor", "course", "academy", "lesson"])) return "Education / Training Business";
+  if (hasAny(text, ["event", "wedding", "dj", "entertainment", "decor", "photography"])) return "Events / Entertainment Business";
+  if (hasAny(text, ["logistics", "delivery", "courier", "transport", "moving"])) return "Transportation / Delivery Business";
+  if (hasAny(text, ["nonprofit", "non profit", "ngo", "charity", "community", "social service"])) return "Nonprofit / Community Service";
 
   return null;
 };
 
-const isUsefulText = (answer) => {
-  if (!answer || answer.length < 3) return false;
-  if (invalidShortAnswers.includes(answer)) return false;
-  return true;
+const detectGoal = (text = "") => {
+  if (hasAny(text, ["more customers", "more clients", "get customers", "get clients", "leads", "buyers", "traffic", "grow my customer"])) return "Get More Customers";
+  if (hasAny(text, ["sales", "sell", "revenue", "income", "profit", "consistent buyers", "more orders"])) return "Increase Sales";
+  if (hasAny(text, ["seo", "google ranking", "rank on google"])) return "Improve SEO";
+  if (hasAny(text, ["website", "site", "redesign"])) return "Improve Website";
+  if (hasAny(text, ["automation", "automate", "manual time", "save time"])) return "Automate Business";
+  if (hasAny(text, ["systems", "operations", "workflow", "process"])) return "Improve Business Systems";
+  if (hasAny(text, ["marketing", "advertising", "promotion"])) return "Improve Marketing";
+  if (hasAny(text, ["brand", "branding"])) return "Improve Branding";
+  if (hasAny(text, ["grow", "scale", "expand"])) return "Grow the Business";
+
+  return null;
+};
+
+const detectLeadSource = (text = "") => {
+  if (hasAny(text, ["google ads", "facebook ads", "instagram ads", "paid ads", "ads"])) return "Paid Ads";
+  if (hasAny(text, ["agencies", "agency referral", "referral agency"])) return "Agencies";
+  if (hasAny(text, ["referral", "referrals", "word of mouth", "recommendation"])) return "Referrals";
+  if (hasAny(text, ["instagram", "facebook", "tiktok", "linkedin", "social media"])) return "Social Media";
+  if (hasAny(text, ["walk-in", "walk ins", "walkins", "walk in"])) return "Walk-ins";
+  if (hasAny(text, ["google search", "google"])) return "Google";
+  if (hasAny(text, ["website"])) return "Website";
+  if (hasAny(text, ["whatsapp"])) return "WhatsApp";
+  if (hasAny(text, ["none", "not getting customers", "no customers"])) return "No Clear Lead Source";
+
+  return null;
+};
+
+const detectWebsiteStatus = (text = "") => {
+  const url = extractWebsiteUrl(text);
+  if (url) return "Has Website";
+  if (hasAny(text, ["i have a website", "we have a website", "has website", "yes website", "yes i do", "yes we do"])) return "Has Website";
+  if (hasAny(text, ["no website", "don't have a website", "dont have a website", "do not have a website", "without a website", "not yet"])) return "No Website";
+
+  return null;
+};
+
+const detectMarketingChannels = (text = "") => {
+  const channels = [];
+  if (hasAny(text, ["instagram"])) channels.push("Instagram");
+  if (hasAny(text, ["facebook"])) channels.push("Facebook");
+  if (hasAny(text, ["tiktok"])) channels.push("TikTok");
+  if (hasAny(text, ["linkedin"])) channels.push("LinkedIn");
+  if (hasAny(text, ["google"])) channels.push("Google");
+  if (hasAny(text, ["email"])) channels.push("Email");
+  if (hasAny(text, ["whatsapp"])) channels.push("WhatsApp");
+  if (hasAny(text, ["agencies"])) channels.push("Agencies");
+  if (hasAny(text, ["referral", "referrals"])) channels.push("Referrals");
+  if (hasAny(text, ["paid ads", "ads"])) channels.push("Paid Ads");
+  if (hasAny(text, ["flyer", "flyers"])) channels.push("Flyers");
+  if (hasAny(text, ["none", "no marketing"])) return ["None"];
+  return channels.length ? channels : null;
+};
+
+const detectSalesProcess = (text = "") => {
+  if (hasAny(text, ["whatsapp"])) return "WhatsApp";
+  if (hasAny(text, ["dm", "direct message", "inbox"])) return "DM / Inbox";
+  if (hasAny(text, ["phone", "call"])) return "Phone Call";
+  if (hasAny(text, ["booking form", "booking link", "book online"])) return "Booking Form";
+  if (hasAny(text, ["website checkout", "checkout", "online store"])) return "Website Checkout";
+  if (hasAny(text, ["walk-in", "walk in"])) return "Walk-in";
+  if (hasAny(text, ["invoice"])) return "Invoice";
+  if (hasAny(text, ["manual"])) return "Manual Follow-up";
+  if (hasAny(text, ["agency", "agencies"])) return "Agency Referral";
+
+  return null;
+};
+
+const detectAutomationNeed = (text = "") => {
+  if (hasAny(text, ["booking", "bookings", "appointments", "scheduling"])) return "Bookings";
+  if (hasAny(text, ["follow up", "follow-up", "followups", "reminder", "reminders"])) return "Follow-ups";
+  if (hasAny(text, ["payment", "payments", "invoice", "invoicing"])) return "Payments";
+  if (hasAny(text, ["email", "emails"])) return "Emails";
+  if (hasAny(text, ["report", "reports", "reporting"])) return "Reports";
+  if (hasAny(text, ["lead", "leads", "crm", "contacts", "customer management"])) return "Lead Management";
+  if (hasAny(text, ["customer messages", "messages", "inquiries"])) return "Customer Messages";
+  if (hasAny(text, ["task", "tasks", "to do"])) return "Task Management";
+  if (hasAny(text, ["manual", "spreadsheet", "excel", "workflow"])) return "Workflow Automation";
+
+  return null;
+};
+
+const detectMonthlyCustomers = (text = "") => {
+  if (hasAny(text, ["under 20", "less than 20", "below 20"])) return "Under 20";
+  if (hasAny(text, ["20-100", "20 to 100", "between 20 and 100"])) return "20-100";
+  if (hasAny(text, ["100-500", "100 to 500", "between 100 and 500"])) return "100-500";
+  if (hasAny(text, ["500+", "over 500", "more than 500"])) return "500+";
+  const number = extractNumber(text);
+  if (number === null) return null;
+  if (number < 20) return "Under 20";
+  if (number <= 100) return "20-100";
+  if (number <= 500) return "100-500";
+  return "500+";
+};
+
+const detectMonthlyRevenue = (text = "") => {
+  if (hasAny(text, ["under $2k", "under 2k", "less than 2000", "below 2000"])) return "Under $2k";
+  if (hasAny(text, ["$2k-$10k", "2k-10k", "2k to 10k", "2000 to 10000"])) return "$2k-$10k";
+  if (hasAny(text, ["$10k-$50k", "10k-50k", "10k to 50k"])) return "$10k-$50k";
+  if (hasAny(text, ["$50k+", "over 50k", "above 50k", "more than 50000"])) return "$50k+";
+  return null;
+};
+
+const detectTeamSize = (text = "") => {
+  if (hasAny(text, ["just me", "only me", "solo", "myself"])) return "Just me";
+  if (hasAny(text, ["2-5", "2 to 5", "two to five", "2 staff", "3 staff", "4 staff", "5 staff", "2 employees", "3 employees", "4 employees", "5 employees"])) return "2-5";
+  if (hasAny(text, ["6-20", "6 to 20", "six to twenty", "6 staff", "10 staff", "15 staff", "20 staff", "6 employees", "10 employees", "15 employees", "20 employees"])) return "6-20";
+  if (hasAny(text, ["20+ staff", "20+ employees", "over 20 staff", "over 20 employees", "more than 20 staff", "more than 20 employees"])) return "20+";
+  return null;
+};
+
+const detectBusinessStage = (text = "") => {
+  if (hasAny(text, ["idea stage", "just an idea", "not started"])) return "Idea Stage";
+  if (hasAny(text, ["less than 1 year", "under 1 year", "few months", "new business", "3 months", "4 months", "5 months", "6 months", "7 months", "8 months", "9 months", "10 months", "11 months"])) return "Less than 1 year";
+  if (hasAny(text, ["1-3 years", "1 to 3 years", "one year", "1 year", "2 years", "3 years"])) return "1-3 years";
+  if (hasAny(text, ["3-5 years", "3 to 5 years", "4 years", "5 years"])) return "3-5 years";
+  if (hasAny(text, ["over 5 years", "more than 5 years", "5+ years", "6 years", "7 years", "8 years", "9 years", "10 years"])) return "Over 5 years";
+  return null;
+};
+
+const detectWebsiteGoal = (text = "") => {
+  if (hasAny(text, ["call"])) return "Call";
+  if (hasAny(text, ["book", "booking"])) return "Book";
+  if (hasAny(text, ["buy", "purchase", "shop"])) return "Buy";
+  if (hasAny(text, ["quote", "estimate"])) return "Request a Quote";
+  if (hasAny(text, ["contact", "message"])) return "Contact";
+  if (hasAny(text, ["subscribe", "join"])) return "Join List";
+  return null;
+};
+
+const detectLocation = (rawText = "") => {
+  const text = String(rawText || "");
+  const patterns = [
+    /\bin\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+){0,3})/,
+    /\bserve\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+){0,3})/,
+    /\bbased\s+in\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+){0,3})/,
+    /\bmarket\s+is\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+){0,3})/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match?.[1]) return match[1].trim();
+  }
+
+  if (hasAny(text, ["online worldwide", "worldwide", "online"])) return "Online / Worldwide";
+  return null;
+};
+
+const applyAnswerToExpectedField = (profile, rawText, expectedField) => {
+  if (!expectedField) return profile;
+  const value = String(rawText || "").trim();
+  if (!value) return profile;
+  const next = { ...profile };
+
+  if (expectedField === "businessName" && !next.businessName) next.businessName = cleanBusinessName(value);
+  if (expectedField === "businessType" && !next.businessType) next.businessType = detectBusinessType(value) || value;
+  if (expectedField === "serviceLocation" && !next.serviceLocation) next.serviceLocation = detectLocation(value) || value;
+  if (expectedField === "goal" && !next.goal) next.goal = detectGoal(value) || value;
+  if (expectedField === "leadSource" && !next.leadSource) next.leadSource = detectLeadSource(value) || value;
+  if (expectedField === "websiteStatus" && !next.websiteStatus) next.websiteStatus = detectWebsiteStatus(value) || (hasAny(value, ["yes"]) ? "Has Website" : hasAny(value, ["no"]) ? "No Website" : value);
+  if (expectedField === "websiteUrl" && !next.websiteUrl) {
+    next.websiteUrl = extractWebsiteUrl(value) || value;
+    next.websiteStatus = "Has Website";
+  }
+  if (expectedField === "marketingChannels" && !next.marketingChannels) next.marketingChannels = detectMarketingChannels(value) || value;
+  if (expectedField === "salesProcess" && !next.salesProcess) next.salesProcess = detectSalesProcess(value) || value;
+  if (expectedField === "targetCustomers" && !next.targetCustomers) next.targetCustomers = value;
+  if (expectedField === "mainOffer" && !next.mainOffer) next.mainOffer = value;
+  if (expectedField === "automationNeed" && !next.automationNeed) next.automationNeed = detectAutomationNeed(value) || value;
+  if (expectedField === "biggestChallenge" && !next.biggestChallenge) next.biggestChallenge = value;
+  if (expectedField === "monthlyCustomers" && !next.monthlyCustomers) next.monthlyCustomers = detectMonthlyCustomers(value) || value;
+  if (expectedField === "monthlyRevenue" && !next.monthlyRevenue) next.monthlyRevenue = detectMonthlyRevenue(value) || value;
+  if (expectedField === "teamSize" && !next.teamSize) next.teamSize = detectTeamSize(value) || value;
+  if (expectedField === "businessStage" && !next.businessStage) {
+    next.businessStage = detectBusinessStage(value) || value;
+    next.businessAge = next.businessStage;
+  }
+  if (expectedField === "websiteGoal" && !next.websiteGoal) next.websiteGoal = detectWebsiteGoal(value) || value;
+
+  return next;
+};
+
+const updateProfileFromText = (profile, rawText) => {
+  const next = { ...profile };
+  const text = normalize(rawText);
+  const businessName = detectBusinessName(rawText);
+  const url = extractWebsiteUrl(rawText);
+  const businessType = detectBusinessType(text);
+  const goal = detectGoal(text);
+  const leadSource = detectLeadSource(text);
+  const websiteStatus = detectWebsiteStatus(text);
+  const marketingChannels = detectMarketingChannels(text);
+  const salesProcess = detectSalesProcess(text);
+  const automationNeed = detectAutomationNeed(text);
+  const monthlyRevenue = detectMonthlyRevenue(text);
+  const businessStage = detectBusinessStage(text);
+  const websiteGoal = detectWebsiteGoal(text);
+  const location = detectLocation(rawText);
+
+  if (!next.businessName && businessName) next.businessName = businessName;
+  if (!next.businessType && businessType) next.businessType = businessType;
+  if (!next.goal && goal) next.goal = goal;
+  if (!next.leadSource && leadSource) next.leadSource = leadSource;
+  if (!next.serviceLocation && location) next.serviceLocation = location;
+  if (!next.websiteStatus && websiteStatus) next.websiteStatus = websiteStatus;
+  if (!next.websiteUrl && url) next.websiteUrl = url;
+  if (!next.marketingChannels && marketingChannels) next.marketingChannels = marketingChannels;
+  if (!next.salesProcess && salesProcess) next.salesProcess = salesProcess;
+  if (!next.automationNeed && automationNeed) next.automationNeed = automationNeed;
+  if (!next.monthlyRevenue && monthlyRevenue) next.monthlyRevenue = monthlyRevenue;
+  if (!next.businessStage && businessStage) next.businessStage = businessStage;
+  if (!next.businessAge && businessStage) next.businessAge = businessStage;
+  if (!next.websiteGoal && websiteGoal) next.websiteGoal = websiteGoal;
+
+  // Do not globally detect monthlyCustomers or teamSize from every answer.
+  // This prevents values like "under 20 customers" from becoming "20+ team size".
+  return next;
+};
+
+const getMissingFields = (profile = {}) => {
+  const missing = REQUIRED_BLUEPRINT_FIELDS.filter((field) => isEmpty(profile[field]));
+
+  if (profile.websiteStatus === "Has Website" && isEmpty(profile.websiteUrl)) {
+    missing.unshift("websiteUrl");
+  }
+
+  if (profile.websiteStatus === "Has Website" && isEmpty(profile.websiteGoal)) {
+    missing.push("websiteGoal");
+  }
+
+  return [...new Set(missing)];
 };
 
 export const processBusinessConversation = (messages = []) => {
-  const profile = getInitialProfile();
-  const userMessages = messages.filter((msg) => msg.role === "user");
+  let profile = { ...EMPTY_BUSINESS_PROFILE };
+  let expectedField = null;
 
-  for (const msg of userMessages) {
-    const rawAnswer = msg.content?.trim() || "";
-    const answer = normalize(rawAnswer);
-    const step = getCurrentStep(profile);
-
-    if (step === "ready") break;
-
-    if (step === "businessType") {
-      if (!isUsefulText(answer)) continue;
-      profile.businessType = rawAnswer;
+  for (const msg of messages) {
+    if (msg.role === "assistant") {
+      expectedField = detectExpectedFieldFromAssistant(msg.content || "");
       continue;
     }
 
-    if (step === "goal") {
-      const goal = detectGoal(answer);
-      if (!goal) continue;
-      profile.goal = goal;
-      continue;
-    }
-
-    if (step === "leadSource") {
-      const leadSource = detectLeadSource(answer);
-      if (!leadSource) continue;
-      profile.leadSource = leadSource;
-      continue;
-    }
-
-
-    if (step === "serviceLocation") {
-  if (!isUsefulText(answer)) continue;
-  profile.serviceLocation = rawAnswer;
-  continue;
-}
-
-    if (step === "websiteStatus") {
-      if (
-        yesAnswers.includes(answer) ||
-        answer.includes("i have") ||
-        answer.includes("we have") ||
-        hasWebsiteUrl(answer)
-      ) {
-        profile.websiteStatus = "Has Website";
-
-        const url = extractWebsiteUrl(answer);
-        if (url) profile.websiteUrl = url;
-
-        continue;
-      }
-
-      if (
-        noAnswers.includes(answer) ||
-        answer.includes("no website") ||
-        answer.includes("don't have") ||
-        answer.includes("dont have") ||
-        answer.includes("do not have") ||
-        answer.includes("without website") ||
-        answer.includes("without a website")
-      ) {
-        profile.websiteStatus = "No Website";
-        continue;
-      }
-
-      continue;
-    }
-
-    if (step === "websiteUrl") {
-      const url = extractWebsiteUrl(answer);
-      if (!url) continue;
-
-      profile.websiteUrl = url;
-      profile.websiteStatus = "Has Website";
-      continue;
-    }
-
-    if (step === "marketingChannels") {
-      if (!isUsefulText(answer)) continue;
-      profile.marketingChannels = rawAnswer;
-      continue;
-    }
-
-    if (step === "salesProcess") {
-      if (!isUsefulText(answer)) continue;
-      profile.salesProcess = rawAnswer;
-      continue;
-    }
-
-    if (step === "targetCustomers") {
-      if (!isUsefulText(answer)) continue;
-      profile.targetCustomers = rawAnswer;
-      continue;
-    }
-
-    if (step === "mainOffer") {
-      if (!isUsefulText(answer)) continue;
-      profile.mainOffer = rawAnswer;
-      continue;
-    }
-
-    if (step === "automationNeed") {
-      if (!isUsefulText(answer)) continue;
-      profile.automationNeed = rawAnswer;
-      continue;
-    }
-
-    if (step === "biggestChallenge") {
-      if (!isUsefulText(answer)) continue;
-      profile.biggestChallenge = rawAnswer;
-      continue;
-    }
-
-    if (step === "monthlyCustomers") {
-      const number = answer.match(/\d+/);
-      if (!number) continue;
-
-      profile.monthlyCustomers = Number(number[0]);
-      continue;
-    }
-
-    if (step === "teamSize") {
-      const number = answer.match(/\d+/);
-      if (!number) continue;
-
-      profile.teamSize = Number(number[0]);
-      continue;
-    }
-
-    if (step === "businessAge") {
-      if (
-        !answer.includes("month") &&
-        !answer.includes("year") &&
-        !answer.match(/\d+/)
-      ) {
-        continue;
-      }
-
-      profile.businessAge = rawAnswer;
-      continue;
-    }
-
-    if (step === "websiteGoal") {
-      if (!isUsefulText(answer)) continue;
-      profile.websiteGoal = rawAnswer;
-      continue;
+    if (msg.role === "user") {
+      profile = applyAnswerToExpectedField(profile, msg.content || "", expectedField);
+      profile = updateProfileFromText(profile, msg.content || "");
     }
   }
 
-  const currentStep = getCurrentStep(profile);
-  const userAnswerCount = userMessages.length;
+  const missingFields = getMissingFields(profile);
+  const readyForBlueprint = missingFields.length === 0;
 
-  if (currentStep === "ready") {
+  if (readyForBlueprint) {
     return {
       profile,
       readyForBlueprint: true,
-      reply:
-        "Excellent. I have enough information to create your AEMA Growth Blueprint.",
-    };
-  }
-
-  if (userAnswerCount >= 10) {
-    return {
-      profile,
-      readyForBlueprint: true,
-      reply:
-        "I have enough information to create your first AEMA Growth Blueprint. For deeper analysis, you can unlock the full report after reviewing the summary.",
-    };
-  }
-
-  const lastUserMessage = normalize(
-    userMessages[userMessages.length - 1]?.content || ""
-  );
-
-  const needsClarification =
-    userMessages.length > 0 &&
-    (lastUserMessage.length < 3 ||
-      invalidShortAnswers.includes(lastUserMessage));
-
-  if (needsClarification) {
-    return {
-      profile,
-      readyForBlueprint: false,
-      reply: clarificationQuestions[currentStep],
+      missingFields,
+      reply: "Excellent. I have enough information to create your AEMA Growth Blueprint.",
     };
   }
 
   return {
     profile,
     readyForBlueprint: false,
-    reply: questions[currentStep],
+    missingFields,
+    reply: buildConversationalReply({ profile, missingFields }),
   };
 };

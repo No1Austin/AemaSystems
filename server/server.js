@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+
 import aiRoutes from "./routes/aiRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import blueprintRoutes from "./routes/blueprintRoutes.js";
@@ -11,6 +12,12 @@ dotenv.config();
 
 const app = express();
 
+/*
+|--------------------------------------------------------------------------
+| Allowed Origins
+|--------------------------------------------------------------------------
+*/
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
@@ -18,37 +25,142 @@ const allowedOrigins = [
   "https://www.aemasystems.com",
 ];
 
+/*
+|--------------------------------------------------------------------------
+| Stripe Webhook
+|--------------------------------------------------------------------------
+| Stripe requires the raw body BEFORE express.json()
+*/
+
+app.use(
+  "/api/payments/webhook",
+  express.raw({
+    type: "application/json",
+  })
+);
+
+/*
+|--------------------------------------------------------------------------
+| CORS
+|--------------------------------------------------------------------------
+*/
+
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
   })
 );
 
 app.options("*", cors());
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "OPTIONS"],
-    credentials: true,
-  })
-);
+/*
+|--------------------------------------------------------------------------
+| Body Parser
+|--------------------------------------------------------------------------
+*/
 
-app.options(/.*/, cors());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 
-app.use(express.json());
+/*
+|--------------------------------------------------------------------------
+| Health Check
+|--------------------------------------------------------------------------
+*/
 
 app.get("/", (req, res) => {
-  res.send("AEMA Systems API Running");
+  res.json({
+    success: true,
+    service: "AEMA Systems API",
+    status: "Running",
+    version: "1.0.0",
+  });
 });
-app.use("/api/payments", paymentRoutes);
-app.use("/api/bookings", bookingRoutes);
+
+app.get("/health", (req, res) => {
+  res.json({
+    success: true,
+    status: "Healthy",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+
 app.use("/api/ai", aiRoutes);
+
+app.use("/api/bookings", bookingRoutes);
+
 app.use("/api/blueprint", blueprintRoutes);
+
+app.use("/api/payments", paymentRoutes);
+
 app.use("/api/reports", reportRoutes);
+
+/*
+|--------------------------------------------------------------------------
+| 404
+|--------------------------------------------------------------------------
+*/
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Endpoint not found.",
+  });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Global Error Handler
+|--------------------------------------------------------------------------
+*/
+
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Server
+|--------------------------------------------------------------------------
+*/
+
 const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {
-  console.log(`Listening on port: ${PORT}`);
+  console.log(`
+=========================================
+🚀 AEMA Systems API Started
+=========================================
+Environment : ${process.env.NODE_ENV || "development"}
+Port        : ${PORT}
+=========================================
+`);
 });

@@ -1,5 +1,7 @@
+// server/controllers/aiController.js
+
 import { processBusinessConversation } from "../services/profileStateEngine.js";
-import { generateBlueprint } from "../services/blueprintGenerator.js";
+import { analyzeBusiness } from "../services/ai/businessAnalyzer.js";
 
 export const chatWithAemaAI = async (req, res) => {
   try {
@@ -12,30 +14,41 @@ export const chatWithAemaAI = async (req, res) => {
       });
     }
 
-    const result = processBusinessConversation(messages);
+    // AI extracts everything it can from the conversation
+    const conversation = await processBusinessConversation(messages);
 
-    let blueprint = null;
+    let analysis = null;
 
-    if (result.readyForBlueprint) {
-      blueprint = generateBlueprint(result.profile);
+    if (conversation.readyForBlueprint) {
+      analysis = await analyzeBusiness({
+        profile: conversation.profile,
+      });
     }
-
-    console.log("AEMA PROFILE:", result.profile);
-    console.log("READY FOR BLUEPRINT:", result.readyForBlueprint);
-    console.log("BLUEPRINT:", blueprint);
 
     return res.status(200).json({
       success: true,
-      reply: result.reply,
-      profile: result.profile,
-      blueprint,
+
+      reply: conversation.reply,
+
+      profile: analysis?.profile || conversation.profile,
+
+      blueprint: analysis?.blueprint || null,
+
+      report: analysis?.report || null,
+
+      expertAnalysis: analysis?.expertAnalysis || null,
+
+      preparationNotes: analysis?.preparationNotes || null,
     });
   } catch (error) {
-    console.error("AEMA AI error:", error);
+    console.error("AEMA AI Error:", error);
 
     return res.status(500).json({
       success: false,
       message: "AEMA AI failed to respond.",
+      error: error.message,
     });
   }
 };
+
+export default chatWithAemaAI;

@@ -1,143 +1,142 @@
-import { getIndustryInsights } from "./industryInsightsService.js";
-import { detectBusinessPatterns } from "./patternEngine.js";
-import { generateActionPlan } from "./actionPlanService.js";
-import { generateBusinessReasoning } from "./businessReasoningService.js";
-import { calculateGrowthScoreDetails } from "./blueprintScoringService.js";
+// server/services/fullReportGenerator.js
+
+import { generateBlueprint } from "./blueprintGenerator.js";
 import { sanitizeProfile } from "./profileSanitizer.js";
-import { generatePrioritizedRecommendations } from "./recommendationEngine.js";
-import { generateAdvisorNotes } from "./advisorNotesService.js";
-import { generateGrowthProjection } from "./growthProjectionService.js";
-import {
-  deriveBusinessIdentity,
-  getBusinessDisplayName,
-} from "./businessIdentityService.js";
+import { getBusinessDisplayName } from "./businessIdentityService.js";
 
+const uniqueArray = (items = []) => [...new Set(items.filter(Boolean))];
 
-export const generateFullReport = (profile, blueprint) => {
+const formatList = (value) => {
+  if (Array.isArray(value)) return value.join(", ");
+  return value || null;
+};
+
+export const generateFullReport = (profile = {}, existingBlueprint = null) => {
   const cleanProfile = sanitizeProfile(profile);
 
-  const industryInsights = getIndustryInsights(cleanProfile);
-  const businessPatterns = detectBusinessPatterns(cleanProfile);
-  const dynamicActionPlan = generateActionPlan(cleanProfile);
-  const scoring = calculateGrowthScoreDetails(cleanProfile);
-  const identity = deriveBusinessIdentity(profile);
-const businessDisplayName = getBusinessDisplayName(profile);
+  const blueprint = existingBlueprint || generateBlueprint(cleanProfile);
 
-  const reasoning = generateBusinessReasoning({
-    profile: cleanProfile,
-    industryInsights,
-    businessPatterns,
-    scoring,
-  });
+  const businessDisplayName =
+    getBusinessDisplayName(blueprint) || "This business";
 
-  const prioritizedRecommendations =
-    generatePrioritizedRecommendations(cleanProfile);
+  const executiveSummary = uniqueArray([
+    `${businessDisplayName} is currently operating with a Growth Health Score of ${blueprint.growthScore}, indicating ${String(
+      blueprint.growthPotential || "medium"
+    ).toLowerCase()} growth readiness.`,
 
-  const advisorNotes = generateAdvisorNotes(cleanProfile);
+    blueprint.goal
+      ? `The primary strategic objective identified during the assessment is ${String(
+          blueprint.goal
+        ).toLowerCase()}.`
+      : null,
 
-  const growthProjection = generateGrowthProjection(
-    scoring.growthScore,
-    prioritizedRecommendations
-  );
+    blueprint.leadSource
+      ? `Customer acquisition currently relies primarily on ${String(
+          blueprint.leadSource
+        ).toLowerCase()}, creating opportunities to improve conversion efficiency and reduce dependence on a single channel.`
+      : null,
 
-  const executiveSummary = [];
+    blueprint.websiteStatus === "Has Website"
+      ? "The existing website provides a foundation for growth, although optimization opportunities remain."
+      : "The absence of a website represents a significant opportunity to improve credibility, discoverability, and lead capture.",
 
-  executiveSummary.push(
-    `${cleanProfile.businessType || "This business"} is currently operating with a Growth Health Score of ${scoring.growthScore}, indicating ${scoring.growthPotential.toLowerCase()} growth readiness.`
-  );
+    ...(blueprint.executiveSummary || []),
+  ]);
 
-  if (cleanProfile.goal) {
-    executiveSummary.push(
-      `The primary strategic objective identified during the assessment is ${cleanProfile.goal.toLowerCase()}.`
-    );
-  }
+  const websiteAnalysis = uniqueArray([
+    blueprint.websiteUrl
+      ? `Website reviewed: ${blueprint.websiteUrl}`
+      : "No website URL was provided.",
+    blueprint.websiteAudit?.score !== undefined
+      ? `Website audit score: ${blueprint.websiteAudit.score}/100.`
+      : null,
+    blueprint.websiteAudit?.health
+      ? `Website health: ${blueprint.websiteAudit.health}.`
+      : null,
+    ...(blueprint.websiteAudit?.findings || []),
+    ...(blueprint.websiteAudit?.recommendations || []),
+  ]);
 
-  if (cleanProfile.leadSource) {
-    executiveSummary.push(
-      `Customer acquisition currently relies primarily on ${cleanProfile.leadSource.toLowerCase()}, creating opportunities to improve conversion efficiency and reduce dependence on a single channel.`
-    );
-  }
+  const opportunities = uniqueArray([
+    ...(blueprint.opportunities || []),
+    ...(blueprint.industryInsights?.insights || []),
+    ...(blueprint.industryInsights?.opportunities || []),
+    ...(blueprint.growthOpportunities?.map((item) =>
+      typeof item === "string" ? item : item.title
+    ) || []),
+  ]);
 
-  if (cleanProfile.websiteStatus === "Has Website") {
-    executiveSummary.push(
-      "The existing website provides a foundation for growth, although optimization opportunities remain."
-    );
-  } else {
-    executiveSummary.push(
-      "The absence of a website represents a significant opportunity to improve credibility, discoverability, and lead capture."
-    );
-  }
-
-  if (businessPatterns.length) {
-    executiveSummary.push(businessPatterns[0]);
-  }
+  const risks = uniqueArray([
+    ...(blueprint.risks || []),
+    ...(blueprint.industryInsights?.risks || []),
+  ]);
 
   return {
     title: "AEMA Growth Blueprint Report",
 
     executiveSummary,
 
-    growthScore: scoring.growthScore,
-    growthPotential: scoring.growthPotential,
-    scoreBreakdown: scoring.scoreBreakdown,
-    scoringNotes: scoring.scoringNotes,
-
     businessSnapshot: {
-      businessType: cleanProfile.businessType,
-      goal: cleanProfile.goal,
-      leadSource: cleanProfile.leadSource,
-      websiteStatus: cleanProfile.websiteStatus,
-      websiteUrl: cleanProfile.websiteUrl,
-      automationNeed: cleanProfile.automationNeed,
-      biggestChallenge: cleanProfile.biggestChallenge,
-      monthlyCustomers: cleanProfile.monthlyCustomers,
-      teamSize: cleanProfile.teamSize,
-      businessAge: cleanProfile.businessAge,
-      websiteGoal: cleanProfile.websiteGoal,
-      serviceLocation: cleanProfile.serviceLocation,
-      websiteAuditStatus: cleanProfile.websiteAudit?.available
+      businessName: blueprint.businessName || null,
+      businessType: blueprint.businessType,
+      industry: blueprint.industry,
+      mainOffer: blueprint.mainOffer,
+      goal: blueprint.goal,
+      leadSource: blueprint.leadSource,
+      websiteStatus: blueprint.websiteStatus,
+      websiteUrl: blueprint.websiteUrl,
+      automationNeed: blueprint.automationNeed,
+      biggestChallenge: blueprint.biggestChallenge,
+      monthlyCustomers: blueprint.monthlyCustomers,
+      monthlyRevenue: blueprint.monthlyRevenue,
+      teamSize: blueprint.teamSize,
+      businessStage: blueprint.businessStage || blueprint.businessAge,
+      websiteGoal: blueprint.websiteGoal,
+      salesProcess: blueprint.salesProcess,
+      marketingChannels: formatList(blueprint.marketingChannels),
+      techComfort: blueprint.techComfort,
+      serviceLocation: blueprint.serviceLocation,
+      websiteAuditStatus: blueprint.websiteAudit?.available
         ? "Website audit completed"
         : "Website audit unavailable",
     },
 
-    strengths: reasoning.strengths,
-    weaknesses: reasoning.weaknesses,
-    prioritizedRecommendations,
-    advisorNotes,
-    growthProjection,
+    growthScore: blueprint.growthScore,
+    growthPotential: blueprint.growthPotential,
+    scoreBreakdown: blueprint.scoreBreakdown,
+    scoringNotes: blueprint.scoringNotes,
 
-    opportunities: [
-      ...(blueprint.opportunities || []),
-      ...(industryInsights.insights || []),
-      ...(businessPatterns || []),
-    ],
+    strengths: blueprint.strengths || [],
+    weaknesses: blueprint.weaknesses || [],
+    opportunities,
+    risks,
 
-    risks: reasoning.risks,
+    websiteAnalysis,
+    marketingAnalysis: blueprint.marketingAnalysis || [],
+    automationAnalysis: blueprint.automationAnalysis || [],
+    businessSystemsAnalysis: blueprint.businessSystemsAnalysis || [],
 
-    websiteAnalysis: [
-      ...(cleanProfile.websiteUrl
-        ? [`Website reviewed: ${cleanProfile.websiteUrl}`]
-        : ["No website URL was provided."]),
-      ...(cleanProfile.websiteAudit?.findings || []),
-      ...(cleanProfile.websiteAudit?.recommendations || []),
-    ],
+    actionPlan30Days: blueprint.actionPlan || [],
 
-    marketingAnalysis: reasoning.marketingAnalysis,
-    automationAnalysis: reasoning.automationAnalysis,
-    businessSystemsAnalysis: reasoning.businessSystemsAnalysis,
-
-    actionPlan30Days: dynamicActionPlan,
-
-    recommendedServices: [
+    recommendedServices: uniqueArray([
       ...(blueprint.recommendedServices || []),
-      "AEMA Task Manager",
-    ],
+      "AEMA TaskFlow",
+    ]),
 
-    nextSteps: [
+    nextSteps: blueprint.nextSteps || [
       "Implement priority recommendations.",
       "Track business KPIs.",
       "Review growth progress monthly.",
-      "Use AEMA Task Manager to organize recommendations, assign tasks, track deadlines, and manage implementation progress.",
+      "Use AEMA TaskFlow to organize recommendations, assign tasks, track deadlines, and manage implementation progress.",
     ],
+
+    advancedAnalysis: {
+      growthConstraints: blueprint.growthConstraints || [],
+      growthOpportunities: blueprint.growthOpportunities || [],
+      executiveRecommendation: blueprint.executiveRecommendation || null,
+      industryInsights: blueprint.industryInsights || null,
+      recommendations: blueprint.recommendations || [],
+      priorityActions: blueprint.priorityActions || [],
+    },
   };
 };

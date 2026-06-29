@@ -1,9 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import BookingModal from "../components/BookingModal";
 
+import ReportLoadingScreen from "../components/report/ReportLoadingScreen";
+import ExecutiveDashboard from "../components/report/ExecutiveDashboard";
+import BusinessDashboard from "../components/report/BusinessDashboard";
+import CompetitivePosition from "../components/report/CompetitivePosition";
+import GrowthImpactCalculator from "../components/report/GrowthImpactCalculator";
+import ExecutiveSummary from "../components/report/ExecutiveSummary";
+import TopPriorities from "../components/report/TopPriorities";
+import MarketIntelligenceSection from "../components/report/MarketIntelligenceSection";
+import WebsiteAudit from "../components/report/WebsiteAudit";
+import Roadmap from "../components/report/Roadmap";
+import AnalysisAccordion from "../components/report/AnalysisAccordion";
+import ReportSection from "../components/report/ReportSection";
+import ScorePanel from "../components/report/ScorePanel";
+import ActionPanel from "../components/report/ActionPanel";
+
+import { getDisplayBusinessName, money } from "../components/report/ReportUtils";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const createSafeFilename = (name = "AEMA") => {
+  const safeName = String(name || "AEMA")
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+
+  return safeName || "AEMA";
+};
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
@@ -14,619 +40,343 @@ export default function PaymentSuccess() {
   const [showBooking, setShowBooking] = useState(false);
   const [bookingPlan, setBookingPlan] = useState(null);
 
-  const downloadReport = async () => {
-    try {
-      const report = payment?.fullReport;
+  useEffect(() => {
+    let mounted = true;
 
-      if (!report) {
-        alert("Report is not available yet.");
-        return;
+    const verifyPayment = async () => {
+      try {
+        if (!sessionId) {
+          if (mounted) {
+            setPayment({
+              success: false,
+              paid: false,
+              message: "Missing payment session.",
+            });
+          }
+          return;
+        }
+
+        const { data } = await axios.get(
+          `${API_URL}/api/payments/verify-session/${encodeURIComponent(
+            sessionId
+          )}`
+        );
+
+        if (mounted) {
+          setPayment(data || { success: false, paid: false });
+        }
+      } catch (error) {
+        console.error("Payment verification failed:", error);
+
+        if (mounted) {
+          setPayment({
+            success: false,
+            paid: false,
+            message:
+              error?.response?.data?.message ||
+              "Could not verify payment. Please try again or contact AEMA Systems.",
+          });
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
+    };
 
+    verifyPayment();
+
+    return () => {
+      mounted = false;
+    };
+  }, [sessionId]);
+
+  const report = payment?.fullReport || payment?.report || null;
+
+  const snapshot = useMemo(() => {
+    return report?.businessSnapshot || {};
+  }, [report]);
+
+  const businessName = useMemo(() => {
+    return getDisplayBusinessName(snapshot);
+  }, [snapshot]);
+
+  const downloadReport = async () => {
+    if (!report) {
+      alert("Report is not available yet.");
+      return;
+    }
+
+    try {
       const response = await axios.post(
         `${API_URL}/api/reports/download-pdf`,
         { report },
         { responseType: "blob" }
       );
 
-      const file = new Blob([response.data], {
-        type: "application/pdf",
-      });
-
+      const file = new Blob([response.data], { type: "application/pdf" });
       const fileURL = URL.createObjectURL(file);
+      const filename = createSafeFilename(businessName);
 
       const link = document.createElement("a");
       link.href = fileURL;
-      link.download = "AEMA-Growth-Blueprint.pdf";
+      link.download = `${filename}-Growth-Blueprint.pdf`;
 
       document.body.appendChild(link);
       link.click();
-      link.remove();
+      document.body.removeChild(link);
 
       URL.revokeObjectURL(fileURL);
     } catch (error) {
-      console.error(error);
+      console.error("PDF download failed:", error);
       alert("Could not download PDF. Please try again.");
     }
   };
 
   const openBooking = (plan) => {
-    setBookingPlan(plan);
+    setBookingPlan(plan || payment?.plan || "AEMA Plan");
     setShowBooking(true);
   };
 
-  useEffect(() => {
-    const verifyPayment = async () => {
-      try {
-        if (!sessionId) {
-          setLoading(false);
-          return;
-        }
-
-        const response = await axios.get(
-          `${API_URL}/api/payments/verify-session/${sessionId}`
-        );
-
-        setPayment(response.data);
-      } catch (error) {
-        console.error(error);
-
-        setPayment({
-          success: false,
-          paid: false,
-          message: "Could not verify payment.",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    verifyPayment();
-  }, [sessionId]);
+  const closeBooking = () => {
+    setShowBooking(false);
+    setBookingPlan(null);
+  };
 
   if (loading) {
-    return (
-      <main className="min-h-screen bg-[#020617] text-white flex items-center justify-center">
-        <p>Verifying payment...</p>
-      </main>
-    );
+    return <ReportLoadingScreen />;
   }
 
   if (!payment?.paid) {
-    return (
-      <main className="min-h-screen bg-[#020617] text-white flex items-center justify-center px-6">
-        <section className="max-w-xl text-center rounded-3xl border border-white/10 bg-white/5 p-10">
-          <h1 className="text-3xl font-bold mb-4">Payment Not Verified</h1>
-
-          <p className="text-slate-300 mb-8">
-            We could not verify your payment. Please contact AEMA Systems if you
-            were charged.
-          </p>
-
-          <Link
-            to="/ai"
-            className="inline-flex rounded-xl bg-blue-600 px-6 py-3 font-semibold"
-          >
-            Return to AEMA AI
-          </Link>
-        </section>
-      </main>
-    );
+    return <PaymentFailedPanel message={payment?.message} />;
   }
 
-  const report = payment.fullReport;
-  const planName = payment.planLabel || payment.plan;
-
   return (
-    <main className="payment-success-page min-h-screen bg-[#020617] text-white px-6 py-24">
-      <section className="mx-auto max-w-5xl">
-        <div className="text-center rounded-3xl border border-white/10 bg-white/5 p-10 shadow-2xl mb-8">
-          <h1 className="text-4xl font-bold mb-4">Payment Successful 🎉</h1>
+    <main className="relative min-h-screen overflow-hidden bg-[#020617] px-5 py-20 text-white">
+      <PremiumBackground />
 
-          <p className="text-slate-300 mb-6">
-            Thank you. Your payment has been verified.
-          </p>
+      <section className="relative mx-auto max-w-7xl">
+        <PaymentHeader payment={payment} businessName={businessName} />
 
-          <div className="mx-auto max-w-xl rounded-2xl bg-white/5 border border-white/10 p-5 mb-8 text-left">
-            <p>
-              <strong>Plan:</strong> {planName}
-            </p>
+        {report ? (
+          <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+            <div className="space-y-8">
+              <ReportIntro businessName={businessName} report={report} />
 
-            <p>
-              <strong>Email:</strong> {payment.customerEmail || "Not available"}
-            </p>
+              <ExecutiveDashboard report={report} snapshot={snapshot} />
+              <BusinessDashboard report={report} />
+              <CompetitivePosition report={report} />
+              <GrowthImpactCalculator report={report} snapshot={snapshot} />
+              <ExecutiveSummary report={report} />
+              <TopPriorities report={report} />
 
-            <p>
-              <strong>Amount:</strong>{" "}
-              ${(payment.amountTotal / 100).toFixed(2)}{" "}
-              {payment.currency?.toUpperCase()}
-            </p>
-          </div>
+              <MarketIntelligenceSection data={report.marketIntelligence} />
+              <WebsiteAudit items={report.websiteAnalysis} />
+              <Roadmap items={report.actionPlan30Days} />
+              <AnalysisAccordion report={report} />
 
-          {payment.plan === "blueprint" && (
-            <p className="text-slate-300">
-              Your AEMA Growth Blueprint report is ready below. If you want to
-              discuss the report with an expert, you can book a separate
-              30-minute consultation for $30.
-            </p>
-          )}
+              <ReportSection
+                title="Recommended AEMA Services"
+                items={report.recommendedServices}
+              />
 
-          {payment.plan === "expert" && (
-            <p className="text-slate-300">
-              Your Blueprint + Expert package is active. Your report is ready
-              below, and your included 30-minute expert session can be booked
-              from this page.
-            </p>
-          )}
-
-          {payment.plan === "partner" && (
-            <p className="text-slate-300">
-              Your AEMA Business Partner subscription is active. Your report is
-              ready below, and you can schedule your monthly partner session.
-            </p>
-          )}
-        </div>
-
-        {report && (
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold mb-3">{report.title}</h2>
-
-              {report.executiveSummary?.length > 0 && (
-                <>
-                  <h3 className="text-xl font-bold mb-4 text-blue-300">
-                    Executive Summary
-                  </h3>
-
-                  <ul className="space-y-3 text-slate-300">
-                    {report.executiveSummary.map((item, index) => (
-                      <li
-                        key={index}
-                        className="rounded-xl bg-white/5 border border-white/10 p-4"
-                      >
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
+              <ReportSection title="Next Steps" items={report.nextSteps} />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 mb-8">
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-                <h3 className="font-bold mb-3">Business Snapshot</h3>
+            <aside className="h-fit space-y-5 lg:sticky lg:top-8">
+              <ScorePanel report={report} />
 
-                <p>
-                  <strong>Business:</strong>{" "}
-                  {report.businessSnapshot?.businessType || "Not provided"}
-                </p>
+              <ActionPanel
+                payment={payment}
+                downloadReport={downloadReport}
+                openBooking={openBooking}
+              />
 
-                <p>
-                  <strong>Goal:</strong>{" "}
-                  {report.businessSnapshot?.goal || "Not provided"}
-                </p>
-
-                <p>
-                  <strong>Lead Source:</strong>{" "}
-                  {report.businessSnapshot?.leadSource || "Not provided"}
-                </p>
-
-                {report.businessSnapshot?.serviceLocation && (
-                  <p>
-                    <strong>Location:</strong>{" "}
-                    {report.businessSnapshot.serviceLocation}
-                  </p>
-                )}
-
-                <p>
-                  <strong>Website:</strong>{" "}
-                  {report.businessSnapshot?.websiteStatus || "Not provided"}
-                </p>
-
-                {report.businessSnapshot?.websiteUrl && (
-                  <p>
-                    <strong>Website URL:</strong>{" "}
-                    {report.businessSnapshot.websiteUrl}
-                  </p>
-                )}
-
-                {report.businessSnapshot?.marketingChannels && (
-                  <p>
-                    <strong>Marketing:</strong>{" "}
-                    {report.businessSnapshot.marketingChannels}
-                  </p>
-                )}
-
-                {report.businessSnapshot?.salesProcess && (
-                  <p>
-                    <strong>Sales Process:</strong>{" "}
-                    {report.businessSnapshot.salesProcess}
-                  </p>
-                )}
-              </div>
-
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-                <h3 className="font-bold mb-6 text-center">
-                  AEMA Growth Health
-                </h3>
-
-                <div className="flex flex-col items-center">
-                  <div className="relative">
-                    <div className="absolute inset-0 rounded-full bg-blue-500 opacity-30 animate-ping"></div>
-
-                    <div className="growth-heartbeat relative flex h-32 w-32 items-center justify-center rounded-full border-4 border-blue-400 bg-[#0f172a] shadow-[0_0_50px_rgba(59,130,246,0.45)]">
-                      <span className="text-4xl font-extrabold text-white">
-                        {report.growthScore}
-                      </span>
-                    </div>
-                  </div>
-
-                  <span className="mt-4 text-sm uppercase tracking-[0.3em] text-blue-300">
-                    Growth Score
-                  </span>
-
-                  <span className="mt-2 text-lg font-semibold text-slate-300">
-                    {report.growthPotential}
-                  </span>
-
-                  <p className="mt-4 text-center text-sm text-slate-400">
-                    Based on your AEMA assessment, this score reflects the
-                    current health and growth readiness of your business.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <ReportSection title="Strengths" items={report.strengths} />
-            <ReportSection title="Weaknesses" items={report.weaknesses} />
-            <ReportSection title="Opportunities" items={report.opportunities} />
-            <ReportSection title="Risks" items={report.risks} />
-            <ReportSection
-              title="Website Analysis"
-              items={report.websiteAnalysis}
-            />
-            <ReportSection
-              title="Marketing Analysis"
-              items={report.marketingAnalysis}
-            />
-            <ReportSection
-              title="Automation Analysis"
-              items={report.automationAnalysis}
-            />
-            <ReportSection
-              title="Business Systems Analysis"
-              items={report.businessSystemsAnalysis}
-            />
-            <ReportSection
-              title="30-Day Action Plan"
-              items={report.actionPlan30Days}
-            />
-
-
-            {report.prioritizedRecommendations?.length > 0 && (
-  <section className="mt-10 rounded-3xl border border-amber-500/20 bg-amber-500/10 p-6">
-    <h3 className="text-2xl font-bold mb-4">
-      Priority Recommendations
-    </h3>
-
-    {report.advisorNotes?.length > 0 && (
-  <section className="mt-10 rounded-3xl border border-purple-500/20 bg-purple-500/10 p-6">
-    <h3 className="text-2xl font-bold mb-4">
-      AEMA Advisor Notes
-    </h3>
-{report.growthProjection && (
-  <section className="mt-10 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-6">
-    <h3 className="text-2xl font-bold mb-4">
-      Growth Projection
-    </h3>
-
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="flex flex-col items-center">
-          <span className="text-lg font-bold text-slate-300">
-            {report.growthProjection.currentScore}
-          </span>
-          <span className="text-sm text-slate-400">
-            Current Score
-          </span>
-        </div>
-
-        <div className="flex flex-col items-center">
-          <span className="text-lg font-bold text-slate-300">
-            {report.growthProjection.projectedRange}
-          </span>
-          <span className="text-sm text-slate-400">
-            Projected Range
-          </span>
-        </div>
-
-        <div className="flex flex-col items-center">
-          <span className="text-lg font-bold text-slate-300">
-            {report.growthProjection.timeframe}
-          </span>
-          <span className="text-sm text-slate-400">
-            Timeframe
-          </span>
-        </div>
-      </div>
-
-      <p className="text-slate-300">
-        {report.growthProjection.statement}
-      </p>
-    </div>
-
-    {report.growthProjection.expectedOutcomes?.length > 0 && (
-      <div className="mt-6">
-        <h4 className="font-bold mb-3">
-          Expected Outcomes
-        </h4>
-
-        <ul className="space-y-2 text-slate-300">
-          {report.growthProjection.expectedOutcomes.map(
-            (outcome, index) => (
-              <li key={index}>
-                • {outcome}
-              </li>
-            )
-          )}
-        </ul>
-      </div>
-    )}
-  </section>
-)}
-    <div className="space-y-4">
-      {report.advisorNotes.map((note, index) => (
-        <div
-          key={index}
-          className="rounded-2xl border border-white/10 bg-white/5 p-5"
-        >
-          <p className="text-slate-300 leading-7">
-            
-            "{note}"
-          </p>
-        </div>
-      ))}
-    </div>
-  </section>
-)}
-
-    <div className="space-y-4">
-      {report.prioritizedRecommendations.map((item, index) => (
-        <div
-          key={index}
-          className="rounded-2xl border border-white/10 bg-white/5 p-5"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
-            <span className="rounded-xl bg-red-500/20 px-4 py-2 text-center text-sm">
-              Impact: {item.impact}
-            </span>
-
-            <span className="rounded-full bg-blue-500/20 px-3 py-1 text-sm">
-              Effort: {item.effort}
-            </span>
-
-            <span className="rounded-full bg-green-500/20 px-3 py-1 text-sm">
-              {item.timeframe}
-            </span>
+              <MiniTrustPanel />
+            </aside>
           </div>
-
-          <h4 className="font-bold text-lg">
-            {item.title}
-          </h4>
-
-          <p className="mt-2 text-slate-300">
-            {item.reason}
-          </p>
-        </div>
-      ))}
-    </div>
-  </section>
-)}
-            <ReportSection
-              title="Recommended AEMA Services"
-              items={report.recommendedServices}
-            />
-            <ReportSection title="Next Steps" items={report.nextSteps} />
-
-            {report.expertAnalysis && (
-              <ExpertAnalysis analysis={report.expertAnalysis} />
-            )}
-
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-              <button
-                onClick={downloadReport}
-                className="rounded-xl bg-blue-600 px-6 py-3 font-semibold"
-              >
-                Download PDF Report
-              </button>
-
-              {payment.plan === "blueprint" && (
-                <button
-                  onClick={() => openBooking("regular")}
-                  className="rounded-xl bg-white text-slate-900 px-6 py-3 font-semibold"
-                >
-                  Book 30-Min Consultation - $30
-                </button>
-              )}
-
-              {payment.plan === "expert" && (
-                <button
-                  onClick={() => openBooking("expert")}
-                  className="rounded-xl bg-white text-slate-900 px-6 py-3 font-semibold"
-                >
-                  Book Included Expert Session
-                </button>
-              )}
-
-              {payment.plan === "partner" && (
-                <>
-                  <button
-                    onClick={() => openBooking("partner")}
-                    className="rounded-xl bg-white text-slate-900 px-6 py-3 font-semibold"
-                  >
-                    Schedule Monthly Partner Session
-                  </button>
-
-                  <a
-                    href={`https://wa.me/4375661645?text=${encodeURIComponent(
-                      `⭐ AEMA BUSINESS PARTNER SUPPORT REQUEST
-
-Plan: ${payment?.planLabel || "AEMA Business Partner"}
-
-Customer Email: ${payment?.customerEmail || ""}
-
-I need assistance with:
-`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-xl bg-green-600 px-6 py-3 font-semibold text-white"
-                  >
-                    Contact Priority Support
-                  </a>
-                </>
-              )}
-
-              <Link
-                to="/ai"
-                className="rounded-xl border border-white/10 px-6 py-3 font-semibold"
-              >
-                Return to AEMA AI
-              </Link>
-            </div>
-          </div>
+        ) : (
+          <NoReportPanel />
         )}
       </section>
 
-      <BookingModal
-        open={showBooking}
-        onClose={() => setShowBooking(false)}
-        plan={bookingPlan}
-      />
+      <BookingModal open={showBooking} onClose={closeBooking} plan={bookingPlan} />
     </main>
   );
 }
 
-function ReportSection({ title, items }) {
-  if (!items || items.length === 0) return null;
+function PremiumBackground() {
+  return (
+    <>
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(59,130,246,0.22),transparent_30%),radial-gradient(circle_at_85%_20%,rgba(14,165,233,0.18),transparent_28%),radial-gradient(circle_at_50%_90%,rgba(16,185,129,0.16),transparent_35%)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(to_bottom,rgba(2,6,23,0.2),rgba(2,6,23,0.95))]" />
+      <div className="pointer-events-none fixed inset-0 opacity-[0.08] bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:52px_52px]" />
+    </>
+  );
+}
+
+function PaymentHeader({ payment = {}, businessName = "Your Business" }) {
+  const planName = payment.planLabel || payment.plan || "AEMA Plan";
 
   return (
-    <section className="mb-7">
-      <h3 className="text-xl font-bold mb-3">{title}</h3>
+    <section className="mb-10 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-8 text-center shadow-2xl backdrop-blur-xl">
+      <div className="mx-auto mb-5 inline-flex rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-200">
+        AEMA Growth Blueprint
+      </div>
 
-      <ul className="space-y-2 text-slate-300">
-        {items.map((item, index) => (
-          <li
-            key={index}
-            className="rounded-xl bg-white/5 border border-white/10 p-4"
-          >
-            {item}
-          </li>
-        ))}
-      </ul>
+      <h1 className="mb-3 text-4xl font-extrabold md:text-5xl">
+        Payment Successful 🎉
+      </h1>
+
+      <p className="mb-8 text-slate-300">
+        Thank you. Your payment has been verified.
+      </p>
+
+      <div className="mx-auto mb-6 max-w-2xl rounded-2xl border border-blue-400/20 bg-blue-500/10 p-6">
+        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-200">
+          Business Report Prepared For
+        </p>
+
+        <h2 className="mt-3 text-3xl font-black text-white md:text-4xl">
+          {businessName}
+        </h2>
+      </div>
+
+      <div className="mx-auto grid max-w-3xl gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 text-left md:grid-cols-3">
+        <InfoItem label="Plan" value={planName} />
+        <InfoItem label="Email" value={payment.customerEmail || "Not available"} />
+        <InfoItem
+          label="Amount"
+          value={money(payment.amountTotal, payment.currency)}
+        />
+      </div>
+
+      <p className="mx-auto mt-6 max-w-3xl text-slate-300">
+        <span className="font-semibold text-white">{businessName}</span>'s
+        executive business intelligence report is ready. Review your dashboard,
+        market intelligence, competitive positioning, financial projection, and
+        30-day execution roadmap below.
+      </p>
     </section>
   );
 }
 
-function ExpertAnalysis({ analysis }) {
+function ReportIntro({ businessName, report }) {
+  const score = report?.growthScore || report?.score || "—";
+  const market = report?.marketIntelligence;
+
   return (
-    <section className="mt-10 rounded-3xl border border-blue-500/20 bg-blue-500/10 p-6">
-      <h3 className="text-2xl font-bold mb-4">Expert Strategic Analysis</h3>
+    <section className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-2xl backdrop-blur-xl">
+      <div className="grid gap-5 md:grid-cols-3">
+        <IntroCard
+          label="Business"
+          value={businessName || "Your Business"}
+          note="Personalized growth report"
+        />
 
-      <ReportSection
-        title="Consultant Summary"
-        items={analysis.consultantSummary}
-      />
+        <IntroCard
+          label="Growth Score"
+          value={score === "—" ? "—" : `${score}/100`}
+          note="AEMA business readiness signal"
+        />
 
-      {analysis.gapAnalysis?.length > 0 && (
-        <section className="mb-7">
-          <h4 className="text-xl font-bold mb-3">Gap Analysis</h4>
+        <IntroCard
+          label="Market Data"
+          value={market?.available ? "Available" : "Limited"}
+          note={
+            market?.available
+              ? "Live intelligence included"
+              : "Internal analysis used"
+          }
+        />
+      </div>
+    </section>
+  );
+}
 
-          <div className="space-y-4">
-            {analysis.gapAnalysis.map((gap, index) => (
-              <div
-                key={index}
-                className="rounded-xl bg-white/5 border border-white/10 p-4"
-              >
-                <h5 className="font-bold mb-2">{gap.area}</h5>
+function InfoItem({ label, value }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/10 p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        {label}
+      </p>
+      <p className="mt-2 font-bold text-white">{value}</p>
+    </div>
+  );
+}
 
-                <div className="space-y-4">
-                  <strong>Current State:</strong> {gap.currentState}
-                </div>
+function IntroCard({ label, value, note }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        {label}
+      </p>
+      <h3 className="mt-2 text-2xl font-black text-white">{value}</h3>
+      <p className="mt-2 text-sm text-slate-400">{note}</p>
+    </div>
+  );
+}
 
-                <div className="space-y-4">
-                  <strong>Desired State:</strong> {gap.desiredState}
-                </div>
+function MiniTrustPanel() {
+  return (
+    <section className="rounded-3xl border border-white/10 bg-white/[0.045] p-5 shadow-xl backdrop-blur-xl">
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-200">
+        AEMA Intelligence
+      </p>
 
-                <div className="space-y-4">
-                  <strong>Gap:</strong> {gap.gap}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      <h3 className="mt-3 text-xl font-bold text-white">
+        Built for business action
+      </h3>
 
-      {analysis.strategicOpportunities?.length > 0 && (
-        <section className="mb-7">
-          <h4 className="text-xl font-bold mb-3">Strategic Opportunities</h4>
+      <p className="mt-3 text-sm leading-6 text-slate-300">
+        This report is designed to help you understand your current position,
+        identify growth gaps, and take practical steps toward better visibility,
+        conversion, and business management.
+      </p>
+    </section>
+  );
+}
 
-          <div className="space-y-4">
-            {analysis.strategicOpportunities.map((item, index) => (
-              <div
-                key={index}
-                className="rounded-xl bg-white/5 border border-white/10 p-4"
-              >
-                <p className="text-blue-300 font-semibold">
-                  Priority: {item.priority}
-                </p>
+function PaymentFailedPanel({ message }) {
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020617] px-6 text-white">
+      <PremiumBackground />
 
-                <h5 className="font-bold mt-1">{item.opportunity}</h5>
+      <section className="relative max-w-xl rounded-3xl border border-white/10 bg-white/[0.045] p-10 text-center shadow-2xl backdrop-blur-xl">
+        <h1 className="mb-4 text-3xl font-bold">Payment Not Verified</h1>
 
-                <p className="text-slate-300 mt-2">{item.rationale}</p>
+        <p className="mb-8 text-slate-300">
+          {message ||
+            "We could not verify your payment. Please contact AEMA Systems if you were charged."}
+        </p>
 
-                <p className="text-slate-300 mt-2">
-                  <strong>AEMA Support:</strong>{" "}
-                  {item.recommendedAemaSupport}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+        <Link
+          to="/ai"
+          className="inline-flex rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-500"
+        >
+          Return to AEMA AI
+        </Link>
+      </section>
+    </main>
+  );
+}
 
-      {analysis.ninetyDayRoadmap?.length > 0 && (
-        <section className="mb-7">
-          <h4 className="text-xl font-bold mb-3">90-Day Strategic Roadmap</h4>
+function NoReportPanel() {
+  return (
+    <section className="mx-auto max-w-2xl rounded-[2rem] border border-white/10 bg-white/[0.045] p-8 text-center shadow-2xl backdrop-blur-xl">
+      <h2 className="mb-3 text-2xl font-bold">Report Not Available Yet</h2>
 
-          <div className="space-y-4">
-            {analysis.ninetyDayRoadmap.map((month, index) => (
-              <div
-                key={index}
-                className="rounded-xl bg-white/5 border border-white/10 p-4"
-              >
-                <h5 className="font-bold mb-2">{month.period}</h5>
+      <p className="mb-6 text-slate-300">
+        Your payment was verified, but the report data was not returned from the
+        server.
+      </p>
 
-                <ul className="space-y-2 text-slate-300">
-                  {month.actions.map((action, i) => (
-                    <li key={i}>• {action}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <ReportSection
-        title="Priority Actions"
-        items={analysis.priorityActions}
-      />
-
-      <ReportSection
-        title="Expected Outcomes"
-        items={analysis.expectedOutcomes}
-      />
+      <Link
+        to="/ai"
+        className="inline-flex rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-500"
+      >
+        Return to AEMA AI
+      </Link>
     </section>
   );
 }

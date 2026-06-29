@@ -1,7 +1,4 @@
-import {
-  calculateGrowthScore,
-  getGrowthPotential,
-} from "../services/blueprintScoringService.js";
+import { analyzeBusiness } from "../services/ai/businessAnalyzer.js";
 
 export const submitBlueprintAssessment = async (req, res) => {
   try {
@@ -14,14 +11,25 @@ export const submitBlueprintAssessment = async (req, res) => {
       });
     }
 
-    const growthScore = calculateGrowthScore(answers);
-    const growthPotential = getGrowthPotential(growthScore);
+    const analysis = await analyzeBusiness({
+      profile: answers,
+    });
 
     return res.status(200).json({
       success: true,
       data: {
-        growthScore,
-        growthPotential,
+        growthScore: analysis.blueprint.growthScore,
+        growthPotential: analysis.blueprint.growthPotential,
+
+        profile: analysis.profile,
+
+        blueprint: analysis.blueprint,
+
+        report: analysis.report,
+
+        expertAnalysis: analysis.expertAnalysis,
+
+        preparationNotes: analysis.preparationNotes,
       },
     });
   } catch (error) {
@@ -30,6 +38,7 @@ export const submitBlueprintAssessment = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Assessment failed.",
+      error: error.message,
     });
   }
 };
