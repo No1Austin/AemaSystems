@@ -4,7 +4,8 @@ const cleanText = (value = "") =>
 const normalizeText = (value = "") =>
   cleanText(value)
     .replace(/[^\w\s.$/+:-]/g, " ")
-    .replace(/\s+/g, " ");
+    .replace(/\s+/g, " ")
+    .trim();
 
 const hasAny = (value = "", words = []) => {
   const clean = normalizeText(value);
@@ -19,15 +20,10 @@ const titleCase = (value = "") => {
     .split(" ")
     .map((word) =>
       word.length > 2
-        ? word.charAt(0).toUpperCase() + word.slice(1)
-        : word
+        ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        : word.toLowerCase()
     )
     .join(" ");
-};
-
-const extractNumber = (value = "") => {
-  const match = String(value).match(/\d+/);
-  return match ? parseInt(match[0], 10) : null;
 };
 
 const extractWebsiteUrl = (value = "") => {
@@ -50,9 +46,9 @@ const extractBusinessName = (rawText = "") => {
   const text = String(rawText || "").trim();
 
   const patterns = [
-    /(?:business|company|brand|organization)\s+(?:is called|name is|called)\s+([a-zA-Z0-9&.'\- ]{2,60})/i,
-    /(?:my|our)\s+(?:business|company|brand|organization)\s+(?:is|is called|is named)\s+([a-zA-Z0-9&.'\- ]{2,60})/i,
-    /(?:i run|i own|we run|we own)\s+([a-zA-Z0-9&.'\- ]{2,60})\s+(?:called|named)\s+/i,
+    /(?:business|company|brand|organization)\s+(?:is called|name is|called)\s+([a-zA-Z0-9&.'\- ]{2,80})/i,
+    /(?:my|our)\s+(?:business|company|brand|organization)\s+(?:is|is called|is named)\s+([a-zA-Z0-9&.'\- ]{2,80})/i,
+    /(?:i run|i own|we run|we own)\s+([a-zA-Z0-9&.'\- ]{2,80})/i,
   ];
 
   for (const pattern of patterns) {
@@ -62,6 +58,7 @@ const extractBusinessName = (rawText = "") => {
       const name = match[1]
         .replace(/\bthat\b.*$/i, "")
         .replace(/\band\b.*$/i, "")
+        .replace(/\bwhere\b.*$/i, "")
         .trim();
 
       if (name.length >= 2) return titleCase(name);
@@ -86,7 +83,7 @@ const normalizeRevenue = (value = "") => {
     return "$10k-$50k";
   }
 
-  if (hasAny(clean, ["$50k+", "over 50k", "more than 50000", "above 50k"])) {
+  if (hasAny(clean, ["$50k+", "50k+", "over 50k", "more than 50000", "above 50k"])) {
     return "$50k+";
   }
 
@@ -130,15 +127,45 @@ const normalizeBusinessStage = (value = "") => {
     return "Less than 1 year";
   }
 
-  if (hasAny(clean, ["1-3 years", "1 to 3 years", "one to three years", "1 year", "2 years", "3 years"])) {
+  if (
+    hasAny(clean, [
+      "1-3 years",
+      "1 to 3 years",
+      "one to three years",
+      "1 year",
+      "2 years",
+      "3 years",
+    ])
+  ) {
     return "1-3 years";
   }
 
-  if (hasAny(clean, ["3-5 years", "3 to 5 years", "three to five years", "4 years", "5 years"])) {
+  if (
+    hasAny(clean, [
+      "3-5 years",
+      "3 to 5 years",
+      "three to five years",
+      "4 years",
+      "5 years",
+    ])
+  ) {
     return "3-5 years";
   }
 
-  if (hasAny(clean, ["over 5 years", "more than 5 years", "5+ years", "6 years", "7 years", "8 years", "9 years", "10 years"])) {
+  if (
+    hasAny(clean, [
+      "over 5 years",
+      "more than 5 years",
+      "5+ years",
+      "6 years",
+      "7 years",
+      "8 years",
+      "9 years",
+      "10 years",
+      "15yrs",
+      "15 years",
+    ])
+  ) {
     return "Over 5 years";
   }
 
@@ -147,93 +174,202 @@ const normalizeBusinessStage = (value = "") => {
 
 const BUSINESS_TYPES = [
   {
+    label: "Pharmacy / Retail Health",
+    priority: 100,
+    keywords: [
+      "pharmacy",
+      "drug mart",
+      "drugstore",
+      "drug store",
+      "medication",
+      "medications",
+      "medicine",
+      "prescription",
+      "prescriptions",
+      "pharmacist",
+      "health products",
+      "beauty products",
+      "cosmetics",
+      "vitamins",
+      "shoppers drug mart",
+    ],
+  },
+  {
+    label: "Healthcare / Clinic Business",
+    priority: 95,
+    keywords: [
+      "clinic",
+      "medical clinic",
+      "doctor",
+      "dentist",
+      "physiotherapy",
+      "therapy",
+      "nursing",
+      "healthcare",
+      "home care",
+      "support worker",
+    ],
+  },
+  {
+    label: "Barber Shop",
+    priority: 90,
+    keywords: ["barber", "barbing", "haircut", "fade", "clipper", "beard trim"],
+  },
+  {
+    label: "Hair Salon",
+    priority: 88,
+    keywords: ["hair salon", "hair stylist", "braids", "hair colour", "hair color", "salon"],
+  },
+  {
+    label: "Beauty / Spa Business",
+    priority: 85,
+    keywords: ["makeup", "lashes", "nails", "spa", "skincare", "facial", "beauty salon"],
+  },
+  {
     label: "Cleaning Business",
+    priority: 80,
     keywords: ["cleaning", "cleaner", "janitorial", "housekeeping", "maid"],
   },
   {
-    label: "Barbing / Salon Business",
-    keywords: ["barber", "barbing", "salon", "haircut", "hair salon", "braids", "grooming"],
-  },
-  {
     label: "Restaurant / Food Business",
+    priority: 80,
     keywords: ["restaurant", "food", "catering", "bakery", "kitchen", "meal", "chef"],
   },
   {
     label: "E-commerce Business",
+    priority: 80,
     keywords: ["ecommerce", "e commerce", "online store", "shopify", "dropshipping"],
   },
   {
     label: "Clothing / Fashion Business",
-    keywords: ["clothing", "fashion", "apparel", "boutique", "wears", "clothes", "dress", "native wear", "tailoring"],
+    priority: 80,
+    keywords: ["clothing", "fashion", "apparel", "boutique", "wears", "clothes", "dress", "tailoring"],
   },
   {
     label: "Childcare / Care Service Business",
-    keywords: ["childcare", "daycare", "child care", "elder care", "senior care", "care service"],
+    priority: 80,
+    keywords: ["childcare", "daycare", "child care", "elder care", "senior care"],
   },
   {
     label: "Real Estate Business",
+    priority: 80,
     keywords: ["real estate", "realtor", "property", "housing", "mortgage", "rental"],
   },
   {
-    label: "Beauty Business",
-    keywords: ["beauty", "makeup", "lashes", "nails", "spa", "skincare"],
-  },
-  {
     label: "Fitness Business",
+    priority: 80,
     keywords: ["fitness", "gym", "trainer", "personal training", "workout"],
   },
   {
     label: "Photography / Creative Business",
+    priority: 80,
     keywords: ["photography", "photographer", "photo", "video", "videography", "creative"],
   },
   {
     label: "Tax / Accounting Business",
+    priority: 80,
     keywords: ["tax", "accounting", "bookkeeping", "payroll", "finance"],
   },
   {
     label: "Construction / Contracting Business",
+    priority: 80,
     keywords: ["construction", "contractor", "renovation", "painting", "drywall", "plumbing", "electrical"],
   },
   {
     label: "Consulting Business",
+    priority: 80,
     keywords: ["consulting", "consultant", "coach", "coaching", "advisor", "training"],
   },
   {
-    label: "Healthcare / Care Service Business",
-    keywords: ["healthcare", "clinic", "home care", "nursing", "therapy", "support worker"],
-  },
-  {
     label: "Education / Training Business",
+    priority: 80,
     keywords: ["school", "education", "training", "tutoring", "course", "academy"],
   },
   {
     label: "Transportation / Delivery Business",
+    priority: 80,
     keywords: ["delivery", "transport", "logistics", "courier", "trucking"],
   },
   {
     label: "Automotive Business",
+    priority: 80,
     keywords: ["auto", "car wash", "mechanic", "detailing", "garage"],
   },
   {
     label: "Tech / Software Business",
+    priority: 80,
     keywords: ["software", "saas", "tech", "app", "web app", "technology", "ai", "automation"],
   },
   {
     label: "Event / Entertainment Business",
+    priority: 80,
     keywords: ["event", "dj", "party", "wedding", "entertainment"],
   },
   {
     label: "Nonprofit / Community Organization",
+    priority: 80,
     keywords: ["nonprofit", "ngo", "charity", "community organization", "social service"],
   },
 ];
 
 const detectBusinessType = (text = "") => {
-  const matchedBusiness = BUSINESS_TYPES.find((business) =>
-    hasAny(text, business.keywords)
-  );
+  const clean = normalizeText(text);
 
-  return matchedBusiness?.label || null;
+  const matches = BUSINESS_TYPES.map((business) => {
+    const score = business.keywords.reduce((total, keyword) => {
+      return clean.includes(cleanText(keyword)) ? total + 1 : total;
+    }, 0);
+
+    return {
+      ...business,
+      score,
+    };
+  })
+    .filter((business) => business.score > 0)
+    .sort((a, b) => b.score * b.priority - a.score * a.priority);
+
+  return matches[0]?.label || null;
+};
+
+const detectBusinessTypeFromRelevantAnswer = (rawUserMessages = []) => {
+  const likelyBusinessTypeMessages = rawUserMessages.slice(0, 4).join(" ");
+  return detectBusinessType(likelyBusinessTypeMessages);
+};
+
+const detectGoal = (allText = "") => {
+  if (hasAny(allText, ["more customers", "more clients", "get customers", "more leads", "lead generation"])) {
+    return "Get More Customers";
+  }
+
+  if (hasAny(allText, ["increase sales", "grow sales", "more sales", "revenue"])) {
+    return "Increase Sales";
+  }
+
+  if (hasAny(allText, ["seo", "rank on google", "google ranking", "search engine"])) {
+    return "Improve SEO";
+  }
+
+  if (hasAny(allText, ["improve website", "website audit", "better website", "redesign website", "fix my website"])) {
+    return "Improve Website";
+  }
+
+  if (hasAny(allText, ["business systems", "operations", "workflow", "process", "efficiency"])) {
+    return "Improve Business Systems";
+  }
+
+  if (hasAny(allText, ["automation", "automate", "save time"])) {
+    return "Automate Business";
+  }
+
+  if (hasAny(allText, ["expand", "scale", "open another branch"])) {
+    return "Expand";
+  }
+
+  if (hasAny(allText, ["funding", "investment", "investor", "raise money"])) {
+    return "Raise Funding";
+  }
+
+  return null;
 };
 
 export const extractBusinessProfile = (messages = []) => {
@@ -269,9 +405,11 @@ export const extractBusinessProfile = (messages = []) => {
 
   profile.businessName = extractBusinessName(allRawText);
 
-  const detectedBusinessType = detectBusinessType(allText);
-  if (detectedBusinessType) {
-    profile.businessType = detectedBusinessType;
+  const businessType =
+    detectBusinessTypeFromRelevantAnswer(rawUserMessages) || detectBusinessType(allText);
+
+  if (businessType) {
+    profile.businessType = businessType;
   }
 
   const stage = normalizeBusinessStage(allText);
@@ -280,23 +418,8 @@ export const extractBusinessProfile = (messages = []) => {
     profile.businessAge = stage;
   }
 
-  if (hasAny(allText, ["more customers", "more clients", "get customers", "more leads", "lead generation"])) {
-    profile.goal = "Get More Customers";
-  } else if (hasAny(allText, ["increase sales", "grow sales", "more sales", "revenue"])) {
-    profile.goal = "Increase Sales";
-  } else if (hasAny(allText, ["seo", "rank on google", "google ranking", "search engine"])) {
-    profile.goal = "Improve SEO";
-  } else if (hasAny(allText, ["improve website", "website audit", "better website", "redesign website", "fix my website"])) {
-    profile.goal = "Improve Website";
-  } else if (hasAny(allText, ["business systems", "operations", "workflow", "process"])) {
-    profile.goal = "Improve Business Systems";
-  } else if (hasAny(allText, ["automation", "automate", "save time"])) {
-    profile.goal = "Automate Business";
-  } else if (hasAny(allText, ["expand", "scale", "open another branch"])) {
-    profile.goal = "Expand";
-  } else if (hasAny(allText, ["funding", "investment", "investor", "raise money"])) {
-    profile.goal = "Raise Funding";
-  }
+  const goal = detectGoal(allText);
+  if (goal) profile.goal = goal;
 
   const challengeWords = [
     "customers",
@@ -313,6 +436,8 @@ export const extractBusinessProfile = (messages = []) => {
     "inventory",
     "follow up",
     "follow-up",
+    "efficiency",
+    "customer networks",
   ];
 
   if (hasAny(lastUserMessage, challengeWords)) {
@@ -325,35 +450,12 @@ export const extractBusinessProfile = (messages = []) => {
     profile.monthlyCustomers = "20-100";
   } else if (hasAny(allText, ["100-500", "100 to 500", "between 100 and 500"])) {
     profile.monthlyCustomers = "100-500";
-  } else if (hasAny(allText, ["500+", "over 500", "more than 500"])) {
+  } else if (hasAny(allText, ["500+", "over 500", "more than 500"]) || lastUserMessage === "500") {
     profile.monthlyCustomers = "500+";
-  } else {
-    const customerPhrases = [
-      /(\d+)\s+(customers|clients|buyers|orders|bookings)\s+(a|per|each)?\s*(month|monthly)/i,
-      /(serve|serving|have|about|around)\s+(\d+)\s+(customers|clients|buyers|orders|bookings)/i,
-    ];
-
-    for (const pattern of customerPhrases) {
-      const match = allRawText.match(pattern);
-      const value = match?.[1] || match?.[2];
-
-      if (value) {
-        const num = Number(value);
-
-        if (num < 20) profile.monthlyCustomers = "Under 20";
-        else if (num <= 100) profile.monthlyCustomers = "20-100";
-        else if (num <= 500) profile.monthlyCustomers = "100-500";
-        else profile.monthlyCustomers = "500+";
-
-        break;
-      }
-    }
   }
 
   const revenue = normalizeRevenue(allText);
-  if (revenue) {
-    profile.monthlyRevenue = revenue;
-  }
+  if (revenue) profile.monthlyRevenue = revenue;
 
   if (hasAny(allText, ["just me", "only me", "solo", "myself"])) {
     profile.teamSize = "Just me";
@@ -361,11 +463,13 @@ export const extractBusinessProfile = (messages = []) => {
     profile.teamSize = "2-5";
   } else if (hasAny(allText, ["6-20", "6 to 20", "six to twenty"])) {
     profile.teamSize = "6-20";
-  } else if (hasAny(allText, ["20+", "more than 20", "over 20"])) {
+  } else if (hasAny(allText, ["20+", "more than 20", "over 20"]) || lastUserMessage === "20") {
     profile.teamSize = "20+";
   }
 
-  if (hasAny(allText, ["google ads", "facebook ads", "instagram ads", "paid ads"])) {
+  if (hasAny(allText, ["walk-in", "walk ins", "walkins", "walk in", "physical store"])) {
+    profile.leadSource = "Walk-ins";
+  } else if (hasAny(allText, ["google ads", "facebook ads", "instagram ads", "paid ads"])) {
     profile.leadSource = "Paid Ads";
   } else if (hasAny(allText, ["agencies", "agency referrals", "referral agencies"])) {
     profile.leadSource = "Agencies";
@@ -373,8 +477,6 @@ export const extractBusinessProfile = (messages = []) => {
     profile.leadSource = "Referrals";
   } else if (hasAny(allText, ["instagram", "facebook", "tiktok", "linkedin", "social media"])) {
     profile.leadSource = "Social Media";
-  } else if (hasAny(allText, ["walk-in", "walk ins", "walkins", "physical store"])) {
-    profile.leadSource = "Walk-ins";
   } else if (hasAny(allText, ["google", "google search", "search"])) {
     profile.leadSource = "Google";
   } else if (hasAny(allText, ["website"])) {
@@ -383,7 +485,9 @@ export const extractBusinessProfile = (messages = []) => {
     profile.leadSource = "No Clear Lead Source";
   }
 
-  if (hasAny(allText, ["whatsapp"])) {
+  if (hasAny(allText, ["walk in", "walk-in", "physical store"])) {
+    profile.salesProcess = "Walk-in";
+  } else if (hasAny(allText, ["whatsapp"])) {
     profile.salesProcess = "WhatsApp";
   } else if (hasAny(allText, ["phone", "call"])) {
     profile.salesProcess = "Phone Call";
@@ -391,11 +495,9 @@ export const extractBusinessProfile = (messages = []) => {
     profile.salesProcess = "Instagram DM";
   } else if (hasAny(allText, ["booking link", "book online"])) {
     profile.salesProcess = "Booking Link";
-  } else if (hasAny(allText, ["physical store", "walk in", "walk-in"])) {
-    profile.salesProcess = "Physical Store";
   } else if (hasAny(allText, ["marketplace", "etsy", "amazon", "facebook marketplace"])) {
     profile.salesProcess = "Marketplace";
-  } else if (hasAny(allText, ["website checkout", "checkout"])) {
+  } else if (hasAny(allText, ["website checkout", "checkout", "buy"])) {
     profile.salesProcess = "Website Checkout";
   }
 
@@ -423,12 +525,19 @@ export const extractBusinessProfile = (messages = []) => {
     profile.websiteStatus = "No Website";
   }
 
-  if (hasAny(lastUserMessage, ["call"])) profile.websiteGoal = "Call";
-  else if (hasAny(lastUserMessage, ["book", "booking"])) profile.websiteGoal = "Book";
-  else if (hasAny(lastUserMessage, ["buy", "purchase", "shop"])) profile.websiteGoal = "Buy";
-  else if (hasAny(lastUserMessage, ["quote", "estimate"])) profile.websiteGoal = "Request a Quote";
-  else if (hasAny(lastUserMessage, ["contact", "message"])) profile.websiteGoal = "Contact";
-  else if (hasAny(lastUserMessage, ["join", "subscribe", "email list"])) profile.websiteGoal = "Join List";
+  if (hasAny(allText, ["buy", "purchase", "shop", "products"])) {
+    profile.websiteGoal = "Buy";
+  } else if (hasAny(allText, ["call"])) {
+    profile.websiteGoal = "Call";
+  } else if (hasAny(allText, ["book", "booking"])) {
+    profile.websiteGoal = "Book";
+  } else if (hasAny(allText, ["quote", "estimate"])) {
+    profile.websiteGoal = "Request a Quote";
+  } else if (hasAny(allText, ["contact", "message"])) {
+    profile.websiteGoal = "Contact";
+  } else if (hasAny(allText, ["join", "subscribe", "email list"])) {
+    profile.websiteGoal = "Join List";
+  }
 
   const channels = [];
 
@@ -448,7 +557,9 @@ export const extractBusinessProfile = (messages = []) => {
     profile.marketingChannels = ["None"];
   }
 
-  if (hasAny(allText, ["booking", "bookings", "appointments", "scheduling"])) {
+  if (hasAny(allText, ["customer management", "lead management", "crm", "contacts", "customer messages"])) {
+    profile.automationNeed = "Lead Management";
+  } else if (hasAny(allText, ["booking", "bookings", "appointments", "scheduling"])) {
     profile.automationNeed = "Bookings";
   } else if (hasAny(allText, ["follow up", "follow-up", "reminders"])) {
     profile.automationNeed = "Follow-ups";
@@ -458,8 +569,6 @@ export const extractBusinessProfile = (messages = []) => {
     profile.automationNeed = "Emails";
   } else if (hasAny(allText, ["reports", "reporting"])) {
     profile.automationNeed = "Reports";
-  } else if (hasAny(allText, ["lead management", "crm", "customer management", "contacts", "customer messages"])) {
-    profile.automationNeed = "Lead Management";
   } else if (hasAny(allText, ["tasks", "task management", "to do"])) {
     profile.automationNeed = "Tasks";
   } else if (hasAny(allText, ["manual", "spreadsheets", "excel", "workflow"])) {
