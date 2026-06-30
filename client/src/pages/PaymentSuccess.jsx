@@ -571,7 +571,7 @@ function ReportIntro({ businessName, report }) {
           label="Business"
           value={businessName || "Your Business"}
           subtext="Personalized growth report"
-          type="growthScore"
+          type="business"
           report={report}
         />
 
@@ -587,7 +587,7 @@ function ReportIntro({ businessName, report }) {
         <InsightCard
           label="Market Data"
           value={market?.available ? "Available" : "Limited"}
-          type="competition"
+          type="marketData"
           report={report}
           accent="teal"
           subtext={
@@ -631,6 +631,78 @@ function InfoItem({ label, value }) {
 }
 
 
+
+function getCardExplanation(type, report = {}) {
+  const market = report?.marketIntelligence || {};
+  const stats = market?.competitorStats || {};
+  const website =
+    report?.websiteAudit ||
+    report?.websiteAnalysis ||
+    report?.website ||
+    {};
+
+  const growthScore = report?.growthScore || report?.score;
+  const websiteScore =
+    website?.score ||
+    report?.websiteScore ||
+    report?.websiteHealth ||
+    report?.websiteAnalysis?.score;
+
+  const googleRating =
+    market?.googleBusinessProfile?.rating ||
+    market?.googleRating ||
+    stats?.averageRating;
+
+  const competitorCount =
+    stats?.totalCompetitorsFound ||
+    stats?.totalCompetitors ||
+    market?.competitors?.length;
+
+  const websitePresence = stats?.websitePresencePercent;
+
+  const explanations = {
+    business:
+      "This identifies the business this report was prepared for. AEMA uses this as the anchor for the website audit, market comparison, recommendations, and growth roadmap.",
+
+    growthScore: growthScore
+      ? `This score measures how ready the business is to grow. A score of ${growthScore}/100 reflects the combined strength of sales, marketing, operations, website quality, automation, and maturity.`
+      : "This score measures how ready the business is to grow based on sales, marketing, operations, website quality, automation, and maturity.",
+
+    websiteHealth: websiteScore
+      ? `This measures how well the website supports visibility, trust, SEO, and conversion. The current website score is ${websiteScore}/100, so the website should be treated as an important improvement area.`
+      : "This measures how well the website supports visibility, trust, SEO, and conversion. A low score means the website may be reducing customer confidence or blocking leads.",
+
+    googleRating: googleRating
+      ? `This reflects public customer trust from Google reviews. The rating helps show how customers currently perceive the business compared with competitors in the same local market.`
+      : "This reflects public customer trust from Google reviews. If this shows N/A, AEMA could not confidently match a Google Business Profile for the business.",
+
+    competition: competitorCount
+      ? `This shows how crowded the local market is. AEMA identified ${competitorCount} visible competitors or similar businesses from Google market data.`
+      : "This shows how crowded the local market is based on visible competitors found through Google Places data.",
+
+    avgMarketRating:
+      "This is the average Google rating of similar businesses in the local market. It helps show the level of customer expectation the business must compete against.",
+
+    websitePresence:
+      typeof websitePresence === "number"
+        ? `This shows the percentage of visible competitors with websites. In this market, ${websitePresence}% of visible competitors have websites, so digital presence is a customer expectation.`
+        : "This shows the percentage of visible competitors that have websites. A high percentage means customers expect a strong digital presence.",
+
+    marketData: market?.available
+      ? "Live Google market intelligence is included in this report, including competitor visibility, rating averages, review patterns, and website presence."
+      : "This report is using internal AEMA analysis because live market intelligence was limited, unavailable, or not confidently matched.",
+
+    bottleneck:
+      "This is the main issue currently limiting growth. Solving this first should create the fastest improvement across visibility, conversion, or operations.",
+  };
+
+  return (
+    explanations[type] ||
+    "This metric helps AEMA understand the business position and prioritize growth recommendations."
+  );
+}
+
+
 function InsightCard({ label, value, subtext, type, report, accent = "blue" }) {
   const accentStyles = {
     blue: "from-blue-500/20 to-blue-900/20 border-blue-400/30",
@@ -640,7 +712,7 @@ function InsightCard({ label, value, subtext, type, report, accent = "blue" }) {
   };
 
   return (
-    <div className={`rounded-3xl border bg-gradient-to-br ${accentStyles[accent]} p-6`}>
+    <div className={`rounded-3xl border bg-gradient-to-br ${accentStyles[accent] || accentStyles.blue} p-6`}>
       <p className="text-sm text-slate-400">{label}</p>
       <h3 className="mt-3 text-4xl font-black text-white">{value || "N/A"}</h3>
       {subtext && <p className="mt-2 text-sm text-slate-400">{subtext}</p>}
@@ -738,7 +810,7 @@ Overall, this business does not need to start from zero. It already has importan
         Executive Business Summary
       </h2>
       <div className="mt-6 space-y-5 text-base leading-8 text-slate-300">
-        {summary.split("\\n").filter(Boolean).map((paragraph, index) => (
+        {summary.split("\n").filter(Boolean).map((paragraph, index) => (
           <p key={index}>{paragraph}</p>
         ))}
       </div>
