@@ -13,7 +13,11 @@ import {
   saveMarketIntelligenceCache,
 } from "./marketCacheService.js";
 
-const unavailableResponse = (reason) => ({
+const log = (...args) => {
+  console.log("🌍 MARKET INTELLIGENCE:", ...args);
+};
+
+const unavailableResponse = (reason, debug = {}) => ({
   available: false,
   fromCache: false,
   source: null,
@@ -21,6 +25,7 @@ const unavailableResponse = (reason) => ({
   reason:
     reason ||
     "Market intelligence is currently unavailable. This report uses AEMA internal business analysis only.",
+  debug,
   googleBusinessProfile: null,
   googleBusinessFound: false,
   googleBusinessConfidence: 0,
@@ -48,13 +53,22 @@ const normalizeSearchTerm = (value = "") =>
 const getSearchTerm = (profile = {}) =>
   normalizeSearchTerm(profile.businessType) ||
   normalizeSearchTerm(profile.industry) ||
-  normalizeSearchTerm(profile.mainOffer);
+  normalizeSearchTerm(profile.mainOffer) ||
+  normalizeSearchTerm(profile.business) ||
+  normalizeSearchTerm(profile.service);
 
 const getLocation = (profile = {}) =>
-  String(profile.serviceLocation || "").trim();
+  String(
+    profile.serviceLocation ||
+      profile.location ||
+      profile.city ||
+      profile.address ||
+      profile.targetLocation ||
+      ""
+  ).trim();
 
 const getBusinessName = (profile = {}) =>
-  String(profile.businessName || "").trim();
+  String(profile.businessName || profile.name || profile.companyName || "").trim();
 
 const buildMarketScore = (stats = {}) => {
   const competitorCount = stats.totalCompetitorsFound || 0;
@@ -110,9 +124,17 @@ const buildMarketScore = (stats = {}) => {
 
 export const generateMarketIntelligence = async (profile = {}) => {
   try {
-    if (!process.env.GOOGLE_PLACES_API_KEY) {
+    log("Function reached.");
+    log("Raw profile:", JSON.stringify(profile, null, 2));
+
+    const hasGoogleKey = Boolean(process.env.GOOGLE_PLACES_API_KEY);
+
+    log("Google key exists:", hasGoogleKey);
+
+    if (!hasGoogleKey) {
       return unavailableResponse(
-        "Google Places API key is not configured. Market intelligence was skipped."
+        "Google Places API key is not configured. Market intelligence was skipped.",
+        { hasGoogleKey }
       );
     }
 
@@ -120,15 +142,21 @@ export const generateMarketIntelligence = async (profile = {}) => {
     const searchTerm = getSearchTerm(profile);
     const location = getLocation(profile);
 
+    log("Business name:", businessName || "N/A");
+    log("Search term:", searchTerm || "MISSING");
+    log("Location:", location || "MISSING");
+
     if (!searchTerm) {
       return unavailableResponse(
-        "Business type, industry, or main offer is required for market intelligence."
+        "Business type, industry, or main offer is required for market intelligence.",
+        { businessName, searchTerm, location }
       );
     }
 
     if (!location) {
       return unavailableResponse(
-        "Service location is required for market intelligence."
+        "Service location is required for market intelligence.",
+        { businessName, searchTerm, location }
       );
     }
 
@@ -138,9 +166,12 @@ export const generateMarketIntelligence = async (profile = {}) => {
       location,
     });
 
+    log("Cache key:", cacheKey);
+
     const cached = await getCachedMarketIntelligence(cacheKey);
 
     if (cached) {
+      log("Returning cached market intelligence. Google was not called.");
       return {
         ...cached,
         fromCache: true,
@@ -153,17 +184,25 @@ export const generateMarketIntelligence = async (profile = {}) => {
     let googleBusinessCandidates = [];
 
     if (businessName) {
+      log("Calling Google exact business search...");
+
       const exactBusiness = await searchExactBusiness({
         businessName,
         location,
         limit: 5,
       });
 
+      log("Exact business result:", JSON.stringify(exactBusiness, null, 2));
+
       googleBusinessFound = exactBusiness?.found || false;
       googleBusinessProfile = exactBusiness?.business || null;
       googleBusinessConfidence = exactBusiness?.confidence || 0;
       googleBusinessCandidates = exactBusiness?.candidates || [];
+    } else {
+      log("No business name provided. Skipping exact business search.");
     }
+
+    log("Calling Google similar businesses search...");
 
     const placesResult = await searchSimilarBusinesses({
       businessType: searchTerm,
@@ -171,10 +210,18 @@ export const generateMarketIntelligence = async (profile = {}) => {
       limit: 20,
     });
 
+    log("Similar businesses result:", JSON.stringify(placesResult, null, 2));
+
     if (!placesResult?.success) {
       return unavailableResponse(
         placesResult?.error ||
-          "Google Places competitor lookup failed. Market intelligence was skipped."
+          "Google Places competitor lookup failed. Market intelligence was skipped.",
+        {
+          businessName,
+          searchTerm,
+          location,
+          placesResult,
+        }
       );
     }
 
@@ -186,9 +233,18 @@ export const generateMarketIntelligence = async (profile = {}) => {
         )
       : competitors;
 
+    log("Competitors found:", competitors.length);
+    log("Competitors after filtering:", filteredCompetitors.length);
+
     if (!filteredCompetitors.length) {
       return unavailableResponse(
-        "No similar businesses were returned from the Google Places search."
+        "No similar businesses were returned from the Google Places search.",
+        {
+          businessName,
+          searchTerm,
+          location,
+          query: placesResult.query,
+        }
       );
     }
 
@@ -238,25 +294,25 @@ export const generateMarketIntelligence = async (profile = {}) => {
       ].filter(Boolean),
 
       marketInsights: [
-  stats.averageReviewCount > 300
-    ? "Customers in this market rely heavily on Google reviews before choosing a business."
-    : "Google reviews are becoming increasingly important and represent an opportunity to stand out.",
+        stats.averageReviewCount > 300
+          ? "Customers in this market rely heavily on Google reviews before choosing a business."
+          : "Google reviews are becoming increasingly important and represent an opportunity to stand out.",
 
-  stats.websitePresencePercent >= 80
-    ? "Most competitors already have websites, making website quality and conversion critical differentiators."
-    : "Many competitors still have limited digital presence, creating an opportunity for a stronger online strategy.",
+        stats.websitePresencePercent >= 80
+          ? "Most competitors already have websites, making website quality and conversion critical differentiators."
+          : "Many competitors still have limited digital presence, creating an opportunity for a stronger online strategy.",
 
-  googleBusinessFound &&
-  googleBusinessProfile?.reviewCount > stats.averageReviewCount
-    ? "Your Google Business Profile appears to outperform the local average, giving you a valuable trust advantage."
-    : "Building your Google reputation should be treated as a growth priority.",
+        googleBusinessFound &&
+        googleBusinessProfile?.reviewCount > stats.averageReviewCount
+          ? "Your Google Business Profile appears to outperform the local average, giving you a valuable trust advantage."
+          : "Building your Google reputation should be treated as a growth priority.",
 
-  stats.averageRating >= 4.7
-    ? "Customer expectations are very high in this market, so maintaining service quality is essential."
-    : "Businesses that consistently deliver excellent customer experiences can differentiate themselves quickly.",
+        stats.averageRating >= 4.7
+          ? "Customer expectations are very high in this market, so maintaining service quality is essential."
+          : "Businesses that consistently deliver excellent customer experiences can differentiate themselves quickly.",
 
-  "The businesses that combine strong reviews, an optimized website, and a simple online booking experience are most likely to outperform competitors."
-],
+        "The businesses that combine strong reviews, an optimized website, and a simple online booking experience are most likely to outperform competitors.",
+      ],
 
       marketOpportunities: [
         googleBusinessFound &&
@@ -297,12 +353,17 @@ export const generateMarketIntelligence = async (profile = {}) => {
       ttlDays: 30,
     });
 
+    log("Market intelligence completed successfully.");
+
     return marketData;
   } catch (error) {
-    console.error("Market intelligence error:", error);
+    console.error("❌ Market intelligence error:", error);
 
     return unavailableResponse(
-      "Market intelligence failed unexpectedly. This report uses AEMA internal business analysis only."
+      "Market intelligence failed unexpectedly. This report uses AEMA internal business analysis only.",
+      {
+        error: error.message,
+      }
     );
   }
 };

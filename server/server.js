@@ -12,35 +12,29 @@ dotenv.config();
 
 const app = express();
 
+/*
+|--------------------------------------------------------------------------
+| Allowed Origins
+|--------------------------------------------------------------------------
+*/
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
+
+  // Production
   "https://aemasystems.com",
   "https://www.aemasystems.com",
+
+  // Render Backend
+  "https://aemasystems-1.onrender.com",
 ];
-
-const corsOptions = {
-  origin(origin, callback) {
-    if (!origin) return callback(null, true);
-
-    const isAllowed =
-      allowedOrigins.includes(origin) || origin.endsWith(".vercel.app");
-
-    if (isAllowed) {
-      return callback(null, true);
-    }
-
-    return callback(new Error(`Not allowed by CORS: ${origin}`));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-};
 
 /*
 |--------------------------------------------------------------------------
 | Stripe Webhook
 |--------------------------------------------------------------------------
-| Stripe requires raw body BEFORE express.json()
+| Stripe requires the raw body BEFORE express.json()
 */
 
 app.use(
@@ -56,8 +50,46 @@ app.use(
 |--------------------------------------------------------------------------
 */
 
+const corsOptions = {
+  origin(origin, callback) {
+    // Allow Postman, curl, server-to-server requests
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const isAllowed =
+      allowedOrigins.includes(origin) ||
+      (typeof origin === "string" &&
+        origin.endsWith(".vercel.app"));
+
+    if (isAllowed) {
+      return callback(null, true);
+    }
+
+    console.error("❌ Blocked by CORS:", origin);
+
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
+  },
+
+  credentials: true,
+
+  methods: [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+  ],
+
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+  ],
+};
+
 app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 /*
 |--------------------------------------------------------------------------
