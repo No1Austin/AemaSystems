@@ -1,22 +1,36 @@
 // server/services/industryInsightsService.js
 
-const text = (value = "") =>
-  String(value || "").toLowerCase().trim();
+const text = (value = "") => String(value || "").toLowerCase().trim();
+
+const normalizeText = (value = "") =>
+  text(value)
+    .replace(/[^\w\s/+-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const hasAny = (value = "", words = []) => {
-  const clean = text(value);
-  return words.some((word) => clean.includes(text(word)));
+  const clean = normalizeText(value);
+
+  return words.some((word) => {
+    const keyword = normalizeText(word);
+    if (!keyword) return false;
+
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(^|\\s)${escaped}(\\s|$)`, "i");
+
+    return regex.test(clean);
+  });
 };
 
-const buildIndustry = (
+const buildIndustry = ({
   industry,
   overview,
-  strengths,
-  challenges,
-  marketing,
-  automation,
-  kpis
-) => ({
+  strengths = [],
+  challenges = [],
+  marketing = [],
+  automation = [],
+  kpis = [],
+}) => ({
   industry,
   overview,
   strengths,
@@ -39,288 +53,220 @@ const buildIndustry = (
   ],
 });
 
-export const generateIndustryInsights = (
-  profile = {},
-  identity = {}
-) => {
-  const description = text(`
+const INDUSTRY_PROFILES = [
+  {
+    industry: "Pharmacy / Retail Health",
+    priority: 100,
+    keywords: [
+      "pharmacy",
+      "drug mart",
+      "drugstore",
+      "drug store",
+      "medication",
+      "medications",
+      "medicine",
+      "prescription",
+      "prescriptions",
+      "pharmacist",
+      "health products",
+      "beauty products",
+      "cosmetics",
+      "vitamins",
+      "shoppers drug mart",
+    ],
+    overview:
+      "Pharmacy and retail health businesses grow through trust, convenience, product availability, local visibility, and repeat customer relationships.",
+    strengths: [
+      "High repeat customer potential.",
+      "Strong local trust opportunities.",
+      "Broad customer demand.",
+    ],
+    challenges: [
+      "Customer wait times.",
+      "Inventory availability.",
+      "Review management.",
+      "Customer follow-up.",
+    ],
+    marketing: ["Google Business", "Local SEO", "Google Reviews", "Paid Search"],
+    automation: [
+      "Customer follow-up",
+      "Inventory reminders",
+      "Lead tracking",
+      "Task management",
+    ],
+    kpis: [
+      "Monthly Customers",
+      "Repeat Customers",
+      "Google Rating",
+      "Review Count",
+      "Customer Retention",
+    ],
+  },
+
+  {
+    industry: "Barbering / Grooming",
+    priority: 90,
+    keywords: [
+      "barber",
+      "barbing",
+      "haircut",
+      "hair cut",
+      "hair salon",
+      "grooming",
+      "braids",
+      "beard trim",
+    ],
+    overview:
+      "Barbering and grooming businesses grow through repeat appointments, referrals, reviews, and customer relationships.",
+    strengths: ["Repeat customers.", "Strong referrals."],
+    challenges: ["Missed appointments.", "Customer retention."],
+    marketing: ["Instagram", "Google Reviews", "Local SEO"],
+    automation: ["Appointment reminders", "Booking System", "Customer follow-up"],
+    kpis: ["Bookings", "Repeat Clients", "No-show Rate"],
+  },
+
+  {
+    industry: "Beauty / Spa Services",
+    priority: 88,
+    keywords: [
+      "makeup",
+      "spa",
+      "lashes",
+      "nails",
+      "skincare",
+      "facial",
+      "beauty salon",
+    ],
+    overview:
+      "Beauty and spa businesses grow through visual proof, customer trust, repeat appointments, referrals, and strong online reputation.",
+    strengths: ["Strong visual marketing potential.", "Repeat customer potential."],
+    challenges: ["Customer retention.", "Appointment consistency.", "Trust signals."],
+    marketing: ["Instagram", "TikTok", "Google Reviews", "Local SEO"],
+    automation: ["Booking reminders", "Customer follow-up", "Review requests"],
+    kpis: ["Bookings", "Repeat Clients", "Average Spend", "Reviews"],
+  },
+
+  {
+    industry: "Cleaning Services",
+    priority: 80,
+    keywords: ["cleaning", "cleaner", "janitorial", "maid", "housekeeping"],
+    overview:
+      "Cleaning businesses grow through recurring contracts, referrals, local SEO, trust, and reliable scheduling.",
+    strengths: ["Recurring revenue potential.", "Strong referral opportunities."],
+    challenges: ["Scheduling.", "Staff coordination.", "Generating recurring customers."],
+    marketing: ["Local SEO", "Google Reviews", "Referral Marketing"],
+    automation: ["Booking automation", "Scheduling", "Customer reminders"],
+    kpis: ["Monthly Contracts", "Quote Conversion", "Customer Retention"],
+  },
+
+  {
+    industry: "Food / Restaurant",
+    priority: 80,
+    keywords: ["restaurant", "food", "catering", "meal", "kitchen", "chef", "bakery"],
+    overview:
+      "Food businesses depend on local visibility, convenience, customer reviews, repeat orders, and consistent service quality.",
+    strengths: ["Repeat purchase potential.", "Local customer demand."],
+    challenges: ["Competition.", "Delivery logistics.", "Customer retention."],
+    marketing: ["Google Business", "Instagram", "Local SEO"],
+    automation: ["Online Ordering", "Customer Loyalty", "Booking"],
+    kpis: ["Orders", "Repeat Orders", "Average Spend"],
+  },
+
+  {
+    industry: "Clothing / Fashion",
+    priority: 80,
+    keywords: ["fashion", "clothing", "boutique", "apparel", "wear"],
+    overview:
+      "Fashion businesses grow through visual branding, customer trust, repeat purchases, and strong online shopping experiences.",
+    strengths: [
+      "High repeat purchase potential.",
+      "Strong visual marketing opportunities.",
+      "Referral opportunities.",
+    ],
+    challenges: [
+      "Customer trust.",
+      "Product differentiation.",
+      "Inventory management.",
+      "Abandoned purchases.",
+    ],
+    marketing: ["Instagram", "TikTok", "Influencer Marketing", "Email Marketing"],
+    automation: [
+      "Customer follow-up",
+      "Inventory management",
+      "Order tracking",
+      "Email automation",
+    ],
+    kpis: [
+      "Conversion Rate",
+      "Average Order Value",
+      "Repeat Customers",
+      "Customer Lifetime Value",
+    ],
+  },
+
+  {
+    industry: "Digital Services",
+    priority: 80,
+    keywords: ["software", "website", "seo", "automation", "digital", "ai", "saas"],
+    overview:
+      "Digital service businesses scale through expertise, recurring clients, referrals, content marketing, and operational efficiency.",
+    strengths: ["High scalability.", "Recurring revenue opportunities."],
+    challenges: ["Standing out.", "Generating qualified leads."],
+    marketing: ["SEO", "LinkedIn", "Content Marketing"],
+    automation: ["CRM", "Lead Automation", "Proposal Tracking"],
+    kpis: ["Qualified Leads", "Monthly Revenue", "Recurring Clients"],
+  },
+];
+
+const buildDescription = (profile = {}, identity = {}) =>
+  normalizeText(`
+    ${profile.businessName || ""}
     ${profile.businessType || ""}
     ${profile.mainOffer || ""}
     ${profile.businessDescription || ""}
+    ${profile.industry || ""}
     ${identity.industry || ""}
+    ${identity.businessType || ""}
+    ${identity.mainOffer || ""}
   `);
 
-  //------------------------------------------------
-  // CLOTHING
-  //------------------------------------------------
-
-  if (
-    hasAny(description, [
-      "fashion",
-      "clothing",
-      "boutique",
-      "apparel",
-      "wear",
-    ])
-  ) {
-    return buildIndustry(
-      "Clothing / Fashion",
-
-      "The fashion industry is highly competitive and strongly influenced by visual branding, customer trust, repeat purchases, and online shopping experiences.",
-
-      [
-        "High repeat purchase potential.",
-        "Strong visual marketing opportunities.",
-        "Easy referral opportunities.",
-      ],
-
-      [
-        "Customer trust.",
-        "Product differentiation.",
-        "Inventory management.",
-        "Abandoned purchases.",
-      ],
-
-      [
-        "Instagram",
-        "TikTok",
-        "Influencer Marketing",
-        "Email Marketing",
-        "SEO",
-      ],
-
-      [
-        "Customer follow-up",
-        "Inventory management",
-        "Order tracking",
-        "Email automation",
-      ],
-
-      [
-        "Conversion Rate",
-        "Average Order Value",
-        "Repeat Customers",
-        "Customer Lifetime Value",
-      ]
+const findBestIndustry = (description = "") => {
+  const matches = INDUSTRY_PROFILES.map((item) => {
+    const score = item.keywords.reduce(
+      (total, keyword) => (hasAny(description, [keyword]) ? total + 1 : total),
+      0
     );
-  }
 
-  //------------------------------------------------
-  // CLEANING
-  //------------------------------------------------
+    return {
+      item,
+      score,
+      weightedScore: score * item.priority,
+    };
+  })
+    .filter((result) => result.score > 0)
+    .sort((a, b) => b.weightedScore - a.weightedScore);
 
-  if (hasAny(description, ["clean", "cleaning", "janitorial"])) {
-    return buildIndustry(
-      "Cleaning Services",
-
-      "Cleaning businesses grow primarily through referrals, Google visibility, recurring contracts, and customer trust.",
-
-      [
-        "High recurring revenue potential.",
-        "Strong referral opportunities.",
-      ],
-
-      [
-        "Generating recurring customers.",
-        "Scheduling.",
-        "Staff coordination.",
-      ],
-
-      [
-        "Local SEO",
-        "Google Reviews",
-        "Referral Marketing",
-      ],
-
-      [
-        "Booking automation",
-        "Scheduling",
-        "Customer reminders",
-      ],
-
-      [
-        "Monthly Contracts",
-        "Quote Conversion",
-        "Customer Retention",
-      ]
-    );
-  }
-
-  //------------------------------------------------
-  // FOOD
-  //------------------------------------------------
-
-  if (
-    hasAny(description, [
-      "restaurant",
-      "food",
-      "catering",
-      "bakery",
-    ])
-  ) {
-    return buildIndustry(
-      "Food / Restaurant",
-
-      "Food businesses depend heavily on local visibility, convenience, customer reviews, and repeat orders.",
-
-      [
-        "Strong repeat purchase potential.",
-        "Local customer base.",
-      ],
-
-      [
-        "Competition.",
-        "Delivery logistics.",
-        "Customer retention.",
-      ],
-
-      [
-        "Google Business",
-        "Instagram",
-        "Local SEO",
-      ],
-
-      [
-        "Online Ordering",
-        "Customer Loyalty",
-        "Booking",
-      ],
-
-      [
-        "Orders",
-        "Repeat Orders",
-        "Average Spend",
-      ]
-    );
-  }
-
-  //------------------------------------------------
-  // BARBER
-  //------------------------------------------------
-
-  if (
-    hasAny(description, [
-      "barber",
-      "salon",
-      "beauty",
-    ])
-  ) {
-    return buildIndustry(
-      "Beauty / Salon",
-
-      "Beauty businesses grow through repeat appointments, referrals, reviews, and customer relationships.",
-
-      [
-        "Repeat customers.",
-        "Strong referrals.",
-      ],
-
-      [
-        "Missed appointments.",
-        "Customer retention.",
-      ],
-
-      [
-        "Instagram",
-        "Google Reviews",
-      ],
-
-      [
-        "Appointment reminders",
-        "Booking System",
-      ],
-
-      [
-        "Bookings",
-        "Repeat Clients",
-        "No-show Rate",
-      ]
-    );
-  }
-
-  //------------------------------------------------
-  // DIGITAL
-  //------------------------------------------------
-
-  if (
-    hasAny(description, [
-      "software",
-      "website",
-      "seo",
-      "automation",
-      "digital",
-      "ai",
-    ])
-  ) {
-    return buildIndustry(
-      "Digital Services",
-
-      "Digital businesses scale through expertise, recurring clients, referrals, content marketing, and operational efficiency.",
-
-      [
-        "High scalability.",
-        "Recurring revenue opportunities.",
-      ],
-
-      [
-        "Standing out.",
-        "Generating qualified leads.",
-      ],
-
-      [
-        "SEO",
-        "LinkedIn",
-        "Content Marketing",
-      ],
-
-      [
-        "CRM",
-        "Lead Automation",
-        "Proposal Tracking",
-      ],
-
-      [
-        "Qualified Leads",
-        "Monthly Revenue",
-        "Recurring Clients",
-      ]
-    );
-  }
-
-  //------------------------------------------------
-  // DEFAULT
-  //------------------------------------------------
-
-  return buildIndustry(
-    identity.industry || "General Business",
-
-    "Every growing business succeeds by attracting customers, converting them consistently, delivering quality service, and improving operations through measurable systems.",
-
-    [
-      "Growth opportunities exist.",
-    ],
-
-    [
-      "Customer acquisition.",
-      "Operational consistency.",
-    ],
-
-    [
-      "SEO",
-      "Referral Marketing",
-      "Social Media",
-    ],
-
-    [
-      "Task Management",
-      "Customer Follow-up",
-      "Workflow Automation",
-    ],
-
-    [
-      "Leads",
-      "Sales",
-      "Customer Retention",
-    ]
-  );
+  return matches[0]?.item || null;
 };
+
+export const generateIndustryInsights = (profile = {}, identity = {}) => {
+  const description = buildDescription(profile, identity);
+  const matchedIndustry = findBestIndustry(description);
+
+  if (!matchedIndustry) {
+    return buildIndustry({
+      industry: identity.industry || profile.industry || null,
+      overview:
+        "The business can improve performance by attracting the right customers, converting interest consistently, delivering quality service, and strengthening operations with measurable systems.",
+      strengths: ["Growth opportunities exist."],
+      challenges: ["Customer acquisition.", "Operational consistency."],
+      marketing: ["SEO", "Referral Marketing", "Social Media"],
+      automation: ["Task Management", "Customer Follow-up", "Workflow Automation"],
+      kpis: ["Leads", "Sales", "Customer Retention"],
+    });
+  }
+
+  return buildIndustry(matchedIndustry);
+};
+
+export const getIndustryProfiles = () => [...INDUSTRY_PROFILES];
