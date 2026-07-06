@@ -5,6 +5,7 @@ import {
   Mail,
   Scale,
   ShieldCheck,
+  TrendingUp,
 } from "lucide-react";
 import TrustLayout from "../../components/trust/TrustLayout";
 import PolicySection from "../../components/trust/PolicySection";
@@ -13,55 +14,63 @@ export default function Compliance() {
   return (
     <TrustLayout
       title="Compliance"
-      description="This Compliance page explains AEMA Systems’ commitment to operating responsibly, transparently, and in alignment with applicable business, privacy, security, and AI governance expectations."
+      description="AEMA Systems is committed to operating responsibly, transparently, and continuously improving our governance, privacy, security, and AI practices."
     >
       <PolicySection icon={ClipboardCheck} title="1. Compliance Commitment">
         <p>
-          AEMA Systems is committed to building trustworthy business technology
-          through responsible operations, privacy awareness, security practices,
-          transparent AI use, and continuous improvement.
+          At AEMA Systems, trust is foundational to how we design, develop, and
+          deliver technology. We are committed to protecting customer
+          information, operating transparently, and continuously improving our
+          governance, security, privacy, and responsible AI practices.
         </p>
       </PolicySection>
 
       <PolicySection
         icon={CheckCircle2}
-        title="2. Current Compliance Focus"
+        title="2. Current Governance Program"
         items={[
-          "Business registration and proper operating records.",
+          "Business governance and proper operating records.",
           "Privacy and data protection practices.",
-          "Clear Terms of Service and user responsibilities.",
+          "Information security and access control awareness.",
           "Responsible AI disclosures and limitations.",
-          "Secure payment processing through trusted providers.",
-          "Transparent refund, cookie, and accessibility policies.",
+          "Risk management and continuous improvement.",
+          "Vendor oversight and secure third-party service usage.",
+          "Transparent policies for users, customers, and partners.",
         ]}
       />
 
       <PolicySection icon={Scale} title="3. Legal and Business Standards">
         <p>
           AEMA Systems operates as a sole proprietorship in Ontario, Canada. We
-          aim to follow applicable Canadian business, privacy, consumer, and
-          commercial requirements as they apply to our services.
+          strive to comply with applicable Canadian laws and regulations relevant
+          to our business activities, including privacy, consumer protection,
+          electronic commerce, and contractual obligations.
+        </p>
+
+        <p>
+          As our business evolves, we review our governance program to align with
+          changing legal, operational, and customer trust expectations.
         </p>
       </PolicySection>
 
       <PolicySection icon={ShieldCheck} title="4. Privacy and Security">
         <p>
-          Our compliance work includes maintaining privacy, security, and data
-          protection practices that reflect the nature and size of our business.
+          We maintain administrative, technical, and organizational measures
+          appropriate to the size and nature of our business.
         </p>
 
         <p>
-          As AEMA Systems grows, we intend to strengthen our internal policies,
-          security controls, data retention practices, incident response
-          procedures, and vendor management processes.
+          These measures may include governance policies, access management,
+          vendor oversight, secure software development practices, secure payment
+          processing, and ongoing reviews of our security and privacy program.
         </p>
       </PolicySection>
 
-      <PolicySection icon={FileText} title="5. AI Governance">
+      <PolicySection icon={FileText} title="5. Responsible AI Governance">
         <p>
-          AEMA Systems uses AI to support business analysis, planning, and
-          digital strategy. We aim to clearly communicate the purpose,
-          limitations, and appropriate use of AI-generated outputs.
+          AEMA Systems uses AI to support business analysis, planning,
+          recommendations, and digital strategy. We aim to clearly communicate
+          the purpose, limitations, and appropriate use of AI-generated outputs.
         </p>
 
         <p>
@@ -72,24 +81,50 @@ export default function Compliance() {
       </PolicySection>
 
       <PolicySection
-        title="6. What AEMA Does Not Claim Yet"
+        title="6. Current Certification Status"
         items={[
-          "We do not currently claim SOC 2 certification.",
-          "We do not currently claim ISO 27001 certification.",
-          "We do not currently claim formal third-party security certification.",
-          "We do not currently claim to be a regulated financial, investment, legal, tax, or accounting advisor.",
+          "AEMA Systems does not currently claim SOC 2 certification.",
+          "AEMA Systems does not currently claim ISO/IEC 27001 certification.",
+          "AEMA Systems does not currently claim formal third-party security certification.",
+          "AEMA Systems is not a regulated financial, investment, legal, tax, or accounting advisor.",
+        ]}
+      >
+        <p>
+          While we are not currently certified under frameworks such as SOC 2 or
+          ISO/IEC 27001, our Governance OS is designed to help us organize,
+          monitor, and improve governance practices aligned with recognized
+          industry frameworks.
+        </p>
+      </PolicySection>
+
+      <PolicySection
+        icon={TrendingUp}
+        title="7. Governance Roadmap"
+        items={[
+          "Strengthening internal governance processes.",
+          "Expanding security monitoring and access review practices.",
+          "Enhancing vendor management and risk tracking.",
+          "Improving incident response and business continuity planning.",
+          "Increasing audit readiness over time.",
+          "Advancing alignment with recognized compliance frameworks.",
         ]}
       />
 
-      <PolicySection title="7. Continuous Improvement">
+      <PolicySection title="8. Continuous Improvement">
         <p>
           Compliance is an ongoing process. AEMA Systems will continue improving
           its governance documents, internal procedures, technical safeguards,
           AI policies, customer protections, and business practices over time.
         </p>
+
+        <p>
+          Trust is built through transparency, accountability, responsible
+          innovation, and continuous improvement. AEMA Systems is committed to
+          strengthening its governance program as we grow.
+        </p>
       </PolicySection>
 
-      <PolicySection icon={Mail} title="8. Contact">
+      <PolicySection icon={Mail} title="9. Contact">
         <p>
           For compliance questions, contact{" "}
           <a

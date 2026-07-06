@@ -24,13 +24,10 @@ const trustCards = [
     description:
       "Review AEMA Systems policies, terms, privacy commitments, refund rules, and accessibility standards.",
     icon: FileText,
-    href: "/privacy",
+    href: "/trust/privacy",
     links: [
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Terms of Service", href: "/terms" },
-      { label: "Cookie Policy", href: "/cookies" },
-      { label: "Refund Policy", href: "/refund-policy" },
-      { label: "Accessibility", href: "/accessibility" },
+      { label: "Privacy Policy", href: "/trust/privacy" },
+      { label: "Terms of Service", href: "/trust/terms" },
     ],
   },
   {
@@ -38,23 +35,17 @@ const trustCards = [
     description:
       "Learn how AEMA Systems protects business information, payments, accounts, and platform access.",
     icon: Lock,
-    href: "/security",
-    links: [
-      { label: "Security Overview", href: "/security" },
-      { label: "Data Protection", href: "/data-protection" },
-      { label: "Report Vulnerability", href: "mailto:security@aemasystems.com" },
-    ],
+    href: "/trust/security",
+    links: [{ label: "Security Overview", href: "/trust/security" }],
   },
   {
     title: "Responsible AI",
     description:
       "Understand how AEMA AI supports business decision-making with transparency and human oversight.",
     icon: Bot,
-    href: "/responsible-ai",
+    href: "/trust/responsible-ai",
     links: [
-      { label: "Responsible AI Policy", href: "/responsible-ai" },
-      { label: "AI Limitations", href: "/ai-limitations" },
-      { label: "Human Oversight", href: "/human-oversight" },
+      { label: "Responsible AI Policy", href: "/trust/responsible-ai" },
     ],
   },
   {
@@ -62,12 +53,8 @@ const trustCards = [
     description:
       "See AEMA Systems’ commitment to operating responsibly as a trusted business technology company.",
     icon: Scale,
-    href: "/compliance",
-    links: [
-      { label: "Compliance Overview", href: "/compliance" },
-      { label: "Business Standards", href: "/business-standards" },
-      { label: "Platform Commitments", href: "/platform-commitments" },
-    ],
+    href: "/trust/compliance",
+    links: [{ label: "Compliance Overview", href: "/trust/compliance" }],
   },
 ];
 
@@ -83,7 +70,6 @@ const commitments = [
 export default function TrustCenter() {
   return (
     <main className="min-h-screen bg-[#050816] text-white">
-      {/* Hero */}
       <section className="relative overflow-hidden px-6 py-24">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.18),transparent_30%),radial-gradient(circle_at_80%_10%,rgba(16,185,129,0.16),transparent_28%),radial-gradient(circle_at_50%_90%,rgba(59,130,246,0.14),transparent_35%)]" />
 
@@ -122,7 +108,6 @@ export default function TrustCenter() {
         </div>
       </section>
 
-      {/* Trust Cards */}
       <section className="px-6 pb-20">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-6 md:grid-cols-2">
@@ -175,7 +160,6 @@ export default function TrustCenter() {
         </div>
       </section>
 
-      {/* Commitments */}
       <section className="px-6 pb-20">
         <div className="mx-auto max-w-7xl rounded-3xl border border-cyan-400/10 bg-cyan-400/[0.04] p-8 md:p-10">
           <div className="grid gap-10 md:grid-cols-2 md:items-center">
@@ -210,7 +194,6 @@ export default function TrustCenter() {
         </div>
       </section>
 
-      {/* Version + Contact */}
       <section className="px-6 pb-24">
         <div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-2">
           <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">

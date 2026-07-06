@@ -95,7 +95,7 @@ export default function App() {
             </ProtectedAdminRoute>
           }
         />
-
+    
         <Route
           path="/governance/documents"
           element={
