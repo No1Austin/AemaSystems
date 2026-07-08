@@ -1,10 +1,11 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import PolicyPage from "./pages/trust/PolicyPage";
+
 import Home from "./pages/Home";
 import GrowthBlueprint from "./pages/GrowthBlueprint";
 import AemaAI from "./pages/AemaAI";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import AdminLogin from "./pages/auth/AdminLogin";
+import ComplianceOS from "./pages/ComplianceOS";
 import SoftwareDevelopment from "./services/software-development";
 import AIAutomation from "./services/ai-automation";
 import BusinessSystems from "./services/business-systems";
@@ -21,36 +22,29 @@ import Startups from "./industries/startups";
 import ProtectedAdminRoute from "./components/auth/ProtectedAdminRoute";
 
 import TrustCenter from "./pages/trust/TrustCenter";
-import PrivacyPolicy from "./pages/trust/PrivacyPolicy";
-import TermsOfService from "./pages/trust/TermsOfService";
-import CookiePolicy from "./pages/trust/CookiePolicy";
-import RefundPolicy from "./pages/trust/RefundPolicy";
-import AccessibilityStatement from "./pages/trust/Accessibility";
-import ResponsibleAI from "./pages/trust/ResponsibleAI";
-import Security from "./pages/trust/Security";
-import Compliance from "./pages/trust/Compliance";
-import GovernancePolicyEditor from "./pages/governance/GovernancePolicyEditor";
+import PolicyPage from "./pages/trust/PolicyPage";
+
 import GovernanceDashboard from "./pages/governance/GovernanceDashboard";
 import GovernanceDocuments from "./pages/governance/GovernanceDocuments";
 import GovernanceRisks from "./pages/governance/GovernanceRisks";
 import GovernanceVendors from "./pages/governance/GovernanceVendors";
 import GovernanceReviews from "./pages/governance/GovernanceReviews";
 import GovernanceSettings from "./pages/governance/GovernanceSettings";
+import GovernancePolicyEditor from "./pages/governance/GovernancePolicyEditor";
+import ComplianceAssessment from "./pages/governance/ComplianceAssessment";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/trust/:slug" element={<PolicyPage />} />
-        <Route path="/admin-login" element={<AdminLogin />} />
         {/* Main Pages */}
         <Route path="/" element={<Home />} />
         <Route path="/ai" element={<AemaAI />} />
         <Route path="/growth-blueprint" element={<GrowthBlueprint />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
 
         {/* Services */}
-        
         <Route path="/services/software-development" element={<SoftwareDevelopment />} />
         <Route path="/services/ai-automation" element={<AIAutomation />} />
         <Route path="/services/business-systems" element={<BusinessSystems />} />
@@ -65,28 +59,11 @@ export default function App() {
         <Route path="/industries/retail" element={<Retail />} />
         <Route path="/industries/startups" element={<Startups />} />
 
-        {/* Trust Center */}
+        {/* Dynamic Trust Center */}
         <Route path="/trust" element={<TrustCenter />} />
-        <Route path="/trust/privacy" element={<PrivacyPolicy />} />
-        <Route path="/trust/terms" element={<TermsOfService />} />
-        <Route path="/trust/cookies" element={<CookiePolicy />} />
-        <Route path="/trust/refund-policy" element={<RefundPolicy />} />
-        <Route path="/trust/accessibility" element={<AccessibilityStatement />} />
-        <Route path="/trust/responsible-ai" element={<ResponsibleAI />} />
-        <Route path="/trust/security" element={<Security />} />
-        <Route path="/trust/compliance" element={<Compliance />} />
+        <Route path="/trust/:slug" element={<PolicyPage />} />
 
-        {/* Old Trust Routes */}
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/terms" element={<TermsOfService />} />
-        <Route path="/cookies" element={<CookiePolicy />} />
-        <Route path="/refund-policy" element={<RefundPolicy />} />
-        <Route path="/accessibility" element={<AccessibilityStatement />} />
-        <Route path="/responsible-ai" element={<ResponsibleAI />} />
-        <Route path="/security" element={<Security />} />
-        <Route path="/compliance" element={<Compliance />} />
-
-        {/* Protected Governance Portal */}
+        {/* Protected Compliance / Governance OS */}
         <Route
           path="/governance"
           element={
@@ -95,12 +72,31 @@ export default function App() {
             </ProtectedAdminRoute>
           }
         />
-    
+<Route path="/compliance-os" element={<ComplianceOS />} />
+        
+        <Route
+          path="/governance/assessment"
+          element={
+            <ProtectedAdminRoute>
+              <ComplianceAssessment />
+            </ProtectedAdminRoute>
+          }
+        />
+
         <Route
           path="/governance/documents"
           element={
             <ProtectedAdminRoute>
               <GovernanceDocuments />
+            </ProtectedAdminRoute>
+          }
+        />
+
+        <Route
+          path="/governance/documents/:slug"
+          element={
+            <ProtectedAdminRoute>
+              <GovernancePolicyEditor />
             </ProtectedAdminRoute>
           }
         />
@@ -122,14 +118,7 @@ export default function App() {
             </ProtectedAdminRoute>
           }
         />
-<Route
-  path="/governance/documents/:slug"
-  element={
-    <ProtectedAdminRoute>
-      <GovernancePolicyEditor />
-    </ProtectedAdminRoute>
-  }
-/>
+
         <Route
           path="/governance/reviews"
           element={

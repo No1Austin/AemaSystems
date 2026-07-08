@@ -2,6 +2,7 @@ import {
   AlertTriangle,
   Building2,
   CalendarClock,
+  ClipboardCheck,
   FileText,
   LayoutDashboard,
   Settings,
@@ -10,6 +11,7 @@ import {
 
 const navItems = [
   { label: "Dashboard", href: "/governance", icon: LayoutDashboard },
+  { label: "Assessment", href: "/governance/assessment", icon: ClipboardCheck },
   { label: "Documents", href: "/governance/documents", icon: FileText },
   { label: "Risks", href: "/governance/risks", icon: AlertTriangle },
   { label: "Vendors", href: "/governance/vendors", icon: Building2 },

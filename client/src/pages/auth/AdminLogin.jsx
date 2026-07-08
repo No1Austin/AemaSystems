@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Lock, ShieldCheck } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
-const ADMIN_EMAILS = ["austin@aemasystems.com", "austinamadi.e@gmail.com", "trust@aemasystems.com"];
+const ADMIN_EMAILS = ["austin@aemasystems.com", "austinamadi.e@gmail.com", "edmarkaustin@GamepadDirectional.com", "trust@aemasystems.com"];
 
 export default function AdminLogin() {
   const navigate = useNavigate();

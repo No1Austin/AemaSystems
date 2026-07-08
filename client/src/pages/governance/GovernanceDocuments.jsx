@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bot, Database, FileText, Lock, Scale, ShieldCheck } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
-import GovernanceLayout from "../../components/governance/GovernanceLayout";
+import ComplianceLayout from "../../modules/compliance/layouts/ComplianceLayout.jsx";
 
 const iconMap = {
   Security: Lock,
@@ -38,7 +38,7 @@ export default function GovernanceDocuments() {
   }, []);
 
   return (
-    <GovernanceLayout
+    <ComplianceLayout
       badge="Governance Documents"
       title="Policies"
       description="Manage AEMA Systems Trust Center policies, versions, review cycles, ownership, and publication status."
@@ -95,6 +95,6 @@ export default function GovernanceDocuments() {
           })}
         </section>
       )}
-    </GovernanceLayout>
+    </ComplianceLayout>
   );
 }

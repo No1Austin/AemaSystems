@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { CalendarDays, Flame, Menu, Sparkles, X } from "lucide-react";
+import {
+  Bot,
+  CalendarDays,
+  Flame,
+  Menu,
+  ShieldCheck,
+  Sparkles,
+  X,
+} from "lucide-react";
 
 export default function Navbar({
   externalOpen,
@@ -16,94 +24,101 @@ export default function Navbar({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const taskManagerUrl = "https://task-manager-app-mern-phi.vercel.app/";
+  const taskFlowUrl = "https://taskflowaemasystems.com/";
   const communityUrl = "https://t.me/aemasystems";
 
+  const closeMenu = () => setOpen(false);
+
   const scrollToSection = (id) => {
-    setOpen(false);
+    closeMenu();
 
-    if (location.pathname !== "/") {
-      navigate("/");
-
-      setTimeout(() => {
-        document.getElementById(id)?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }, 250);
-    } else {
+    const scroll = () => {
       document.getElementById(id)?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
+    };
+
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(scroll, 250);
+    } else {
+      scroll();
     }
   };
 
+  const navLinks = [
+    { label: "Services", action: () => scrollToSection("services") },
+    { label: "Industries", action: () => scrollToSection("industries") },
+    { label: "Founder", action: () => scrollToSection("founder") },
+    { label: "Contact", action: () => scrollToSection("booking") },
+  ];
+
   return (
-    <header className={`fixed left-0 right-0 top-0 z-50 px-4 py-4 ${className}`}>
-      <nav className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-[#050816]/80 px-5 py-3 text-white shadow-2xl backdrop-blur-xl">
-        <div className="flex items-center justify-between">
-          <Link to="/" onClick={() => setOpen(false)}>
+    <header
+      className={`fixed left-0 right-0 top-0 z-50 px-3 py-3 md:px-5 ${className}`}
+    >
+      <nav className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-[#020617]/80 px-4 py-3 text-white shadow-2xl shadow-black/30 backdrop-blur-2xl md:rounded-3xl md:px-5">
+        <div className="flex items-center justify-between gap-4">
+          <Link to="/" onClick={closeMenu} className="flex shrink-0 items-center">
             <img
               src="/aema-logo.png"
               alt="AEMA Systems"
-              className="h-10 w-auto object-contain md:h-12"
+              className="h-9 w-auto object-contain md:h-11"
             />
           </Link>
 
-          <div className="hidden items-center gap-7 text-sm text-slate-300 lg:flex">
-            <button onClick={() => scrollToSection("services")} className="hover:text-white">
-              Services
-            </button>
-
-            <button onClick={() => scrollToSection("industries")} className="hover:text-white">
-              Industries
-            </button>
+          <div className="hidden flex-1 items-center justify-center gap-7 text-sm font-medium text-slate-300 lg:flex">
+            {navLinks.map((item) => (
+              <button
+                key={item.label}
+                onClick={item.action}
+                className="transition hover:text-white"
+                type="button"
+              >
+                {item.label}
+              </button>
+            ))}
 
             <a
-              href={taskManagerUrl}
+              href={taskFlowUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-white"
+              className="font-semibold text-cyan-300 transition hover:text-cyan-200"
             >
-              TaskManager
-            </a>
-
-            <Link to="/about-aema-systems" className="hover:text-white">
-              About
-            </Link>
-
-            <button onClick={() => scrollToSection("founder")} className="hover:text-white">
-              Founder
-            </button>
-
-            <button onClick={() => scrollToSection("booking")} className="hover:text-white">
-              Contact
-            </button>
-          </div>
-
-          <div className="hidden items-center gap-3 lg:flex">
-            <a
-              href={communityUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-orange-400/25 bg-orange-500/10 px-3.5 py-2 text-sm font-semibold text-orange-200 transition hover:border-orange-300/50 hover:bg-orange-500/15 hover:text-white"
-            >
-              <Flame size={15} className="text-orange-300" />
-              Community
+              TaskFlow
             </a>
 
             <Link
               to="/ai"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold transition hover:bg-white/10"
+              className="font-semibold text-fuchsia-300 transition hover:text-fuchsia-200"
             >
-              <Sparkles size={16} />
               AEMA AI
             </Link>
 
+            <Link
+              to="/compliance-os"
+              className="font-semibold text-emerald-300 transition hover:text-emerald-200"
+            >
+              Compliance OS
+            </Link>
+          </div>
+
+          <div className="hidden shrink-0 items-center gap-3 lg:flex">
+            <a
+              href={communityUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-orange-400/25 bg-orange-500/10 px-4 py-2.5 text-sm font-bold text-orange-200 transition hover:border-orange-300/50 hover:bg-orange-500/15 hover:text-white"
+            >
+              <Flame size={16} />
+              Community
+            </a>
+
             <button
               onClick={() => scrollToSection("booking")}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold transition hover:bg-blue-500"
+              className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-500"
+              type="button"
             >
               <CalendarDays size={16} />
               Book
@@ -114,82 +129,83 @@ export default function Navbar({
             <button
               onClick={() => setOpen((prev) => !prev)}
               aria-label="Toggle navigation menu"
-              className="inline-flex rounded-xl border border-white/10 bg-white/5 p-3 transition hover:bg-white/10 lg:hidden"
+              aria-expanded={open}
+              className="inline-flex rounded-xl border border-white/10 bg-white/5 p-2.5 text-white transition hover:bg-white/10 lg:hidden"
               type="button"
             >
               {open ? <X size={22} /> : <Menu size={22} />}
             </button>
           )}
         </div>
+      </nav>
 
-        {open && (
-          <div className="mt-4 grid gap-3 border-t border-white/10 pt-4 lg:hidden">
-            <button onClick={() => scrollToSection("services")} className="text-left text-slate-300 hover:text-white">
-              Services
-            </button>
+      {open && (
+        <div className="mx-auto mt-3 max-w-7xl rounded-3xl border border-white/10 bg-[#020617]/95 p-4 text-white shadow-2xl shadow-black/40 backdrop-blur-2xl lg:hidden">
+          <div className="grid gap-2">
+            {navLinks.map((item) => (
+              <button
+                key={item.label}
+                onClick={item.action}
+                className="rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white"
+                type="button"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
 
-            <button onClick={() => scrollToSection("industries")} className="text-left text-slate-300 hover:text-white">
-              Industries
-            </button>
-
-            <a
-              href={taskManagerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
-              className="text-slate-300 hover:text-white"
-            >
-              TaskManager
-            </a>
-
+          <div className="mt-4 grid gap-3">
             <Link
-              to="/about-aema-systems"
-              onClick={() => setOpen(false)}
-              className="text-slate-300 hover:text-white"
+              to="/ai"
+              onClick={closeMenu}
+              className="flex items-center gap-3 rounded-2xl border border-fuchsia-400/20 bg-fuchsia-400/10 p-4 text-sm font-bold text-fuchsia-100"
             >
-              About
+              <Sparkles size={18} />
+              AEMA AI
             </Link>
 
-            <button onClick={() => scrollToSection("founder")} className="text-left text-slate-300 hover:text-white">
-              Founder
+            <Link
+              to="/compliance-os"
+              onClick={closeMenu}
+              className="flex items-center gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm font-bold text-emerald-100"
+            >
+              <ShieldCheck size={18} />
+              Compliance OS
+            </Link>
+
+            <a
+              href={taskFlowUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={closeMenu}
+              className="flex items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-4 text-sm font-bold text-cyan-100"
+            >
+              <Bot size={18} />
+              TaskFlow
+            </a>
+
+            <a
+              href={communityUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={closeMenu}
+              className="flex items-center gap-3 rounded-2xl border border-orange-400/20 bg-orange-500/10 p-4 text-sm font-bold text-orange-100"
+            >
+              <Flame size={18} />
+              Join Community
+            </a>
+
+            <button
+              onClick={() => scrollToSection("booking")}
+              className="mt-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-4 text-sm font-bold text-white shadow-lg shadow-blue-600/20"
+              type="button"
+            >
+              <CalendarDays size={17} />
+              Book a Consultation
             </button>
-
-            <button onClick={() => scrollToSection("booking")} className="text-left text-slate-300 hover:text-white">
-              Contact
-            </button>
-
-            <div className="mt-2 grid gap-3">
-              <a
-                href={communityUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-orange-400/25 bg-orange-500/10 px-4 py-2.5 text-sm font-semibold text-orange-200 transition hover:bg-orange-500/15"
-              >
-                <Flame size={16} className="text-orange-300" />
-                Join Community
-              </a>
-
-              <Link
-                to="/ai"
-                onClick={() => setOpen(false)}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold"
-              >
-                <Sparkles size={16} />
-                AEMA AI
-              </Link>
-
-              <button
-                onClick={() => scrollToSection("booking")}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold"
-              >
-                <CalendarDays size={16} />
-                Book a Consultation
-              </button>
-            </div>
           </div>
-        )}
-      </nav>
+        </div>
+      )}
     </header>
   );
 }

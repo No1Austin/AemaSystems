@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { FileText, Save, Send } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
-import GovernanceLayout from "../../components/governance/GovernanceLayout";
+import ComplianceLayout from "../../modules/compliance/layouts/ComplianceLayout.jsx";
 
 export default function GovernancePolicyEditor() {
   const { slug } = useParams();
@@ -95,7 +95,7 @@ export default function GovernancePolicyEditor() {
   }
 
   return (
-    <GovernanceLayout
+    <ComplianceLayout
       badge="Policy Editor"
       title={policy.title}
       description="Edit, save, and publish Trust Center policies from the AEMA Governance Portal."
@@ -221,7 +221,7 @@ export default function GovernancePolicyEditor() {
           </div>
         </section>
       </div>
-    </GovernanceLayout>
+    </ComplianceLayout>
   );
 }
 
