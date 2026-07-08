@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-
+import complianceRoutes from "./routes/complianceRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import blueprintRoutes from "./routes/blueprintRoutes.js";
@@ -134,6 +134,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/blueprint", blueprintRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/compliance", complianceRoutes);
 
 /*
 |--------------------------------------------------------------------------
