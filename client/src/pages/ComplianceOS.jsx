@@ -1,92 +1,395 @@
-import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
+  ArrowRight,
   Bot,
+  Check,
   CheckCircle2,
-  Download,
-  Globe,
+  ChevronRight,
+  BarChart3,
+  Clock3,
+  Upload,
+  FileText,
+  Globe2,
+  Link2,
+  LockKeyhole,
+  Palette,
   ShieldCheck,
+  Sparkles,
+  WandSparkles,
 } from "lucide-react";
+
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import AssessmentWizard from "../modules/compliance/assessment/AssessmentWizard";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const capabilities = [
+  {
+    icon: ShieldCheck,
+    eyebrow: "Assess",
+    title: "Understand your compliance position",
+    description:
+      "Complete a guided assessment covering privacy, security, vendors, AI, payments, employees, and governance.",
+  },
+  {
+    icon: Bot,
+    eyebrow: "Interpret",
+    title: "Receive business-specific guidance",
+    description:
+      "AEMA evaluates your industry, jurisdiction, technology use, and operational risks to produce tailored recommendations.",
+  },
+  {
+    icon: FileText,
+    eyebrow: "Generate",
+    title: "Create your compliance package",
+    description:
+      "Generate practical policies, governance documents, readiness summaries, and next-step recommendations for your business.",
+  },
+  {
+    icon: Globe2,
+    eyebrow: "Publish",
+    title: "Present compliance professionally",
+    description:
+      "Launch a polished compliance page, host it with AEMA, or place the supplied link directly on your own website.",
+  },
+];
+
+const processSteps = [
+  {
+    number: "01",
+    title: "Complete the free assessment",
+    description:
+      "Answer guided questions at your own pace. Your progress remains saved in your browser until you finish.",
+  },
+  {
+    number: "02",
+    title: "Review your readiness result",
+    description:
+      "See your score, maturity level, key gaps, business risks, missing documents, and relevant framework readiness.",
+  },
+  {
+    number: "03",
+    title: "Unlock everything for $29.99 CAD",
+    description:
+      "Pay once to generate your tailored compliance package and publishing options. There is no monthly subscription.",
+  },
+  {
+    number: "04",
+    title: "Customize and publish",
+    description:
+      "Choose your colours, add your logo, adjust the presentation, and decide where your compliance page should live.",
+  },
+];
+
+const packageItems = [
+  "Personalized compliance and governance documents",
+  "Executive readiness and risk summary",
+  "Framework readiness results",
+  "Recommended next actions",
+  "Downloadable compliance package",
+  "Customizable public compliance page",
+  "AEMA-hosted publishing option",
+  "Shareable link for your existing website",
+];
+
+const publishingOptions = [
+  {
+    icon: Palette,
+    title: "Customize your compliance page",
+    description:
+      "Choose your brand colours, add your company logo, and tailor the page presentation to match your business.",
+    badge: "Your brand",
+  },
+  {
+    icon: Globe2,
+    title: "Host it securely with AEMA",
+    description:
+      "Publish your compliance page on AEMA infrastructure without managing an additional website or hosting setup.",
+    badge: "AEMA hosted",
+  },
+  {
+    icon: Link2,
+    title: "Add the link to your website",
+    description:
+      "Copy your public compliance link and place it in your website footer, Trust Center, privacy page, or navigation.",
+    badge: "Simple integration",
+  },
+];
+
+const trustPoints = [
+  "Built in Canada",
+  "Free assessment",
+  "Saved progress",
+  "Account after payment",
+  "Optional hosting",
+];
+
+const dashboardMetrics = [
+  {
+    label: "Compliance score",
+    value: "84%",
+    helper: "Improved 8% this month",
+    icon: BarChart3,
+  },
+  {
+    label: "Documents",
+    value: "14",
+    helper: "12 approved · 2 draft",
+    icon: FileText,
+  },
+  {
+    label: "Next review",
+    value: "18 days",
+    helper: "Privacy Policy",
+    icon: Clock3,
+  },
+  {
+    label: "Hosting",
+    value: "Active",
+    helper: "Public Trust Center live",
+    icon: Globe2,
+  },
+];
+
+const oneTimePackageItems = [
+  "AI-guided compliance assessment",
+  "Executive readiness and risk summary",
+  "Framework readiness results",
+  "Personalized compliance documents",
+  "Download and copy documents",
+  "Lifetime access to generated files",
+  "Customer account and document dashboard",
+];
+
+const proItems = [
+  "Hosted public Trust Center",
+  "Custom company logo",
+  "Custom brand colours",
+  "Public compliance URL",
+  "Policy publishing controls",
+  "Version history",
+  "Review reminders",
+  "Ongoing governance dashboard",
+  "Risk and vendor registers",
+];
+
+const documentItems = [
+  "Privacy Policy",
+  "Cookie Policy",
+  "Terms of Service",
+  "Information Security Policy",
+  "Incident Response Plan",
+  "Vendor Register",
+  "Risk Register",
+  "Responsible AI Policy",
+  "Accessibility Statement",
+  "Business Continuity Plan",
+  "Disaster Recovery Plan",
+  "Data Retention Policy",
+];
 
 export default function ComplianceOS() {
-  const [started, setStarted] = useState(false);
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  async function handleAssessmentFromWizard(answers) {
-    setLoading(true);
-    setErrorMessage("");
-
-    try {
-      const existingDocuments = [];
-
-      if (answers.hasPrivacyPolicy) existingDocuments.push("privacy_policy");
-      if (answers.hasTerms) existingDocuments.push("terms");
-      if (answers.hasCookiePolicy) existingDocuments.push("cookie_policy");
-      if (answers.hasSecurityPolicy) existingDocuments.push("security_policy");
-      if (answers.hasRiskRegister) existingDocuments.push("risk_register");
-      if (answers.hasVendorRegister) existingDocuments.push("vendor_register");
-      if (answers.hasIncidentPlan) existingDocuments.push("incident_response");
-      if (answers.hasAIPolicy) existingDocuments.push("responsible_ai");
-
-      const response = await fetch(`${API_URL}/api/compliance/evaluate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...answers,
-          existingDocuments,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Unable to complete assessment.");
-      }
-
-      setResult(data.result);
-    } catch (error) {
-      console.error(error);
-      setErrorMessage("Unable to complete assessment. Please check your backend.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
-    <main className="min-h-screen bg-[#050816] text-white">
+    <main className="min-h-screen overflow-hidden bg-[#050816] text-white">
       <Navbar />
 
-      <section className="relative overflow-hidden px-6 pb-24 pt-32">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(16,185,129,0.22),transparent_30%),radial-gradient(circle_at_80%_20%,rgba(34,211,238,0.18),transparent_30%)]" />
+      <section className="relative px-5 pb-24 pt-28 sm:px-6 lg:pt-32">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-x-0 top-0 h-[720px] bg-[radial-gradient(circle_at_18%_15%,rgba(16,185,129,0.20),transparent_31%),radial-gradient(circle_at_83%_17%,rgba(34,211,238,0.16),transparent_30%)]" />
+          <div className="absolute left-1/2 top-0 h-[680px] w-px bg-gradient-to-b from-cyan-300/20 via-transparent to-transparent" />
+          <div className="absolute left-1/2 top-[560px] h-96 w-[900px] -translate-x-1/2 rounded-full bg-emerald-500/[0.05] blur-3xl" />
+        </div>
 
         <div className="relative mx-auto max-w-7xl">
-          {!started && !result && <HeroSection onStart={() => setStarted(true)} />}
+          <HeroSection />
 
-          {started && !result && (
-            <>
-              {loading ? (
-                <LoadingState />
-              ) : (
-                <AssessmentWizard onComplete={handleAssessmentFromWizard} />
-              )}
+          <section className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {trustPoints.map((item) => (
+              <div
+                key={item}
+                className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm font-semibold text-slate-300 backdrop-blur"
+              >
+                <Check className="h-4 w-4 text-emerald-300" />
+                {item}
+              </div>
+            ))}
+          </section>
 
-              {errorMessage && (
-                <div className="mx-auto mt-6 max-w-4xl rounded-2xl border border-amber-400/20 bg-amber-400/10 px-5 py-4 text-sm text-amber-200">
-                  {errorMessage}
+          <DashboardPreview />
+
+          <section className="mt-24">
+            <SectionHeading
+              eyebrow="A complete compliance workflow"
+              title="Everything you need to assess, prepare, and present your compliance position."
+              description="Compliance OS transforms a complicated governance process into a guided, professional experience built for growing businesses."
+            />
+
+            <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+              {capabilities.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <article
+                    key={item.title}
+                    className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-6 backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-emerald-400/30 hover:bg-white/[0.055]"
+                  >
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent opacity-0 transition group-hover:opacity-100" />
+
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10">
+                      <Icon className="h-6 w-6 text-emerald-300" />
+                    </span>
+
+                    <p className="mt-6 text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">
+                      {item.eyebrow}
+                    </p>
+
+                    <h2 className="mt-3 text-xl font-bold leading-snug text-white">
+                      {item.title}
+                    </h2>
+
+                    <p className="mt-3 text-sm leading-7 text-slate-400">
+                      {item.description}
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+
+          <section
+            id="how-it-works"
+            className="mt-24 grid gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-center"
+          >
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-cyan-300">
+                <Sparkles className="h-4 w-4" />
+                How it works
+              </div>
+
+              <h2 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl">
+                From business answers to a credible compliance presence.
+              </h2>
+
+              <p className="mt-6 max-w-xl text-base leading-8 text-slate-300 sm:text-lg">
+                Understand your current position, identify what is missing,
+                generate the right documents, and present your commitments with
+                confidence.
+              </p>
+
+              <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-6">
+                <div className="flex items-start gap-4">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10">
+                    <LockKeyhole className="h-5 w-5 text-emerald-300" />
+                  </span>
+
+                  <div>
+                    <h3 className="font-bold text-white">
+                      Your progress stays available
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-7 text-slate-400">
+                      Your assessment draft is saved in your browser, so you can
+                      refresh, close the tab, or return later without starting
+                      again.
+                    </p>
+                  </div>
                 </div>
-              )}
-            </>
-          )}
+              </div>
+            </div>
 
-          {result && <AssessmentResult result={result} />}
+            <div className="relative">
+              <div className="absolute left-[21px] top-10 hidden h-[calc(100%-80px)] w-px bg-gradient-to-b from-emerald-400/50 via-cyan-400/30 to-transparent sm:block" />
+
+              <div className="grid gap-4">
+                {processSteps.map((step) => (
+                  <article
+                    key={step.number}
+                    className="relative flex gap-4 rounded-[1.75rem] border border-white/10 bg-black/20 p-5 transition hover:border-white/20 hover:bg-white/[0.03] sm:p-6"
+                  >
+                    <span className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/20 bg-[#07111f] text-sm font-black text-emerald-300">
+                      {step.number}
+                    </span>
+
+                    <div>
+                      <h3 className="text-lg font-bold text-white">
+                        {step.title}
+                      </h3>
+
+                      <p className="mt-2 text-sm leading-7 text-slate-400">
+                        {step.description}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <DocumentsSection />
+
+          <section className="mt-24">
+            <SectionHeading
+              eyebrow="Hosted Trust Center"
+              title="Publish a compliance page that looks like it belongs to your business."
+              description="Customize the page, host it with AEMA, and share the link anywhere your customers expect to find privacy and security information."
+            />
+
+            <div className="mt-10 grid gap-5 lg:grid-cols-3">
+              {publishingOptions.map((option) => {
+                const Icon = option.icon;
+
+                return (
+                  <article
+                    key={option.title}
+                    className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-7"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
+                        <Icon className="h-6 w-6 text-cyan-300" />
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-semibold text-slate-400">
+                        {option.badge}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-6 text-xl font-bold text-white">
+                      {option.title}
+                    </h3>
+
+                    <p className="mt-3 text-sm leading-7 text-slate-400">
+                      {option.description}
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+
+            <TrustCenterPreview />
+          </section>
+
+          <PricingSection />
+
+          <section className="mt-24 rounded-[2rem] border border-white/10 bg-white/[0.035] px-6 py-12 text-center sm:px-10 sm:py-16">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
+              <ShieldCheck className="h-7 w-7 text-cyan-300" />
+            </span>
+
+            <h2 className="mx-auto mt-6 max-w-3xl text-3xl font-black tracking-tight sm:text-4xl">
+              Build a clearer, more professional compliance presence today.
+            </h2>
+
+            <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
+              Start with the free assessment, review your readiness result, and
+              unlock your complete package only when you are ready.
+            </p>
+
+            <Link
+              to="/compliance-os/assessment"
+              className="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-400 px-7 py-4 text-sm font-black text-slate-950 transition hover:bg-cyan-300"
+            >
+              Get My Compliance Score
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </section>
         </div>
       </section>
 
@@ -95,197 +398,398 @@ export default function ComplianceOS() {
   );
 }
 
-function HeroSection({ onStart }) {
+function HeroSection() {
   return (
-    <div className="mx-auto max-w-4xl text-center">
-      <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-300">
+    <div className="mx-auto max-w-5xl text-center">
+      <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-300">
         <ShieldCheck className="h-4 w-4" />
         AEMA Compliance OS
       </div>
 
-      <h1 className="mt-8 text-5xl font-black leading-tight md:text-7xl">
-        Automate compliance without hiring a compliance team.
+      <h1 className="mt-8 text-5xl font-black leading-[1.02] tracking-[-0.04em] text-white sm:text-6xl md:text-7xl lg:text-[5.4rem]">
+        Build trust.
+        <span className="block bg-gradient-to-r from-emerald-300 via-cyan-300 to-emerald-200 bg-clip-text text-transparent">
+          Demonstrate compliance.
+        </span>
+        Win more business.
       </h1>
 
-      <p className="mt-6 text-lg leading-8 text-slate-300">
-        Complete an AI-guided assessment, discover compliance gaps, see readiness
-        levels, and generate governance documents for your business.
+      <p className="mx-auto mt-7 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
+        Assess your readiness, generate tailored governance documents, create
+        your account, and manage a branded public Trust Center from one
+        intelligent platform.
       </p>
 
-      <button
-        onClick={onStart}
-        className="mt-10 rounded-2xl bg-emerald-400 px-8 py-4 text-sm font-bold text-slate-950 transition hover:bg-emerald-300"
-      >
-        Start Assessment
-      </button>
+      <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <Link
+          to="/compliance-os/assessment"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-8 py-4 text-sm font-black text-slate-950 shadow-lg shadow-emerald-950/30 transition hover:bg-emerald-300 sm:w-auto"
+        >
+          Start Free Assessment
+          <ArrowRight className="h-4 w-4" />
+        </Link>
 
-      <p className="mt-4 text-sm text-slate-400">
-        Compliance package: $49 CAD one-time.
+        <a
+          href="#pricing"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.045] px-8 py-4 text-sm font-bold text-white backdrop-blur transition hover:border-white/20 hover:bg-white/[0.08] sm:w-auto"
+        >
+          View Pricing
+          <ChevronRight className="h-4 w-4" />
+        </a>
+      </div>
+
+      <p className="mt-5 text-sm font-medium text-slate-400">
+        Free assessment. Compliance package{" "}
+        <span className="text-emerald-300">$29.99 CAD</span>. Optional hosting{" "}
+        <span className="text-cyan-300">$19.99 CAD/month</span>.
       </p>
     </div>
   );
 }
 
-function LoadingState() {
+function DashboardPreview() {
   return (
-    <div className="mx-auto max-w-4xl rounded-3xl border border-emerald-400/20 bg-emerald-400/[0.04] p-8 text-center">
-      <Bot className="mx-auto h-10 w-10 text-emerald-400" />
-      <h2 className="mt-5 text-2xl font-black">Evaluating compliance...</h2>
-      <p className="mt-3 text-sm text-slate-400">
-        AEMA AI is reviewing your answers and mapping your business against
-        relevant compliance frameworks.
-      </p>
-    </div>
-  );
-}
-
-function AssessmentResult({ result }) {
-  const frameworks = result.frameworks || [];
-  const missingDocuments = result.missingDocuments || [];
-  const risks = result.risks || [];
-
-  return (
-    <div className="mx-auto max-w-6xl">
-      <div className="rounded-3xl border border-emerald-400/20 bg-emerald-400/[0.05] p-8">
-        <div className="flex items-center gap-3">
-          <Bot className="h-7 w-7 text-emerald-400" />
-          <h2 className="text-3xl font-black">Compliance Readiness Result</h2>
-        </div>
-
-        <div className="mt-8 grid gap-5 md:grid-cols-4">
-          <ScoreCard label="Overall" value={`${result.overallScore || 0}%`} />
-          <ScoreCard
-            label="Maturity"
-            value={`Level ${result.maturity?.level || 1}`}
-          />
-          {frameworks.slice(0, 2).map((framework) => (
-            <ScoreCard
-              key={framework.id}
-              label={framework.name}
-              value={`${framework.score}%`}
-            />
-          ))}
-        </div>
-
-        <div className="mt-8 rounded-3xl border border-white/10 bg-black/20 p-6">
-          <h3 className="text-xl font-bold">
-            {result.maturity?.label || "Reactive"} Maturity
-          </h3>
-          <p className="mt-3 text-sm leading-7 text-slate-400">
-            {result.maturity?.description}
+    <section className="mt-20 rounded-[2.25rem] border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/30 sm:p-7 lg:p-8">
+      <div className="flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
+            Governance Dashboard
           </p>
+          <h2 className="mt-2 text-2xl font-black text-white">
+            A complete view of your compliance workspace.
+          </h2>
         </div>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-2">
-          <Panel title="Missing Documents">
-            {missingDocuments.length === 0 ? (
-              <p className="text-sm text-emerald-300">
-                No major missing documents detected.
-              </p>
-            ) : (
-              missingDocuments.map((item) => (
-                <p key={item.id} className="flex items-center gap-2 text-sm text-slate-300">
-                  <CheckCircle2 className="h-4 w-4 text-amber-400" />
-                  {item.name}
+        <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-bold text-emerald-300">
+          Live workspace preview
+        </span>
+      </div>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {dashboardMetrics.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <div
+              key={item.label}
+              className="rounded-2xl border border-white/10 bg-black/20 p-5"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                  {item.label}
                 </p>
-              ))
-            )}
-          </Panel>
-
-          <Panel title="Key Risks">
-            {risks.length === 0 ? (
-              <p className="text-sm text-emerald-300">No major risks detected.</p>
-            ) : (
-              risks.map((risk) => (
-                <div key={risk.title} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <p className="font-semibold text-white">{risk.title}</p>
-                  <p className="mt-1 text-xs text-amber-300">Risk: {risk.level}</p>
-                  <p className="mt-2 text-sm text-slate-400">{risk.recommendation}</p>
-                </div>
-              ))
-            )}
-          </Panel>
-        </div>
-
-        <div className="mt-8 grid gap-4">
-          <h3 className="text-xl font-bold">Framework Readiness</h3>
-
-          {frameworks.map((framework) => (
-            <div key={framework.id} className="rounded-3xl border border-white/10 bg-black/20 p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h4 className="font-bold">{framework.name}</h4>
-                  <p className="mt-1 text-sm text-slate-400">
-                    {framework.description}
-                  </p>
-                  <p className="mt-2 text-xs text-cyan-300">
-                    Priority: {framework.priority}
-                  </p>
-                </div>
-
-                <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-sm font-bold text-emerald-300">
-                  {framework.score}%
-                </span>
+                <Icon className="h-4 w-4 text-emerald-300" />
               </div>
 
-              {framework.missing?.length > 0 && (
-                <p className="mt-4 text-sm text-amber-300">
-                  Missing: {framework.missing.map((item) => item.name).join(", ")}
-                </p>
-              )}
+              <p className="mt-4 text-3xl font-black text-white">
+                {item.value}
+              </p>
+
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                {item.helper}
+              </p>
             </div>
-          ))}
+          );
+        })}
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-white">
+              Compliance progress
+            </h3>
+            <span className="text-sm font-bold text-emerald-300">
+              84%
+            </span>
+          </div>
+
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full w-[84%] rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400" />
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <MiniStatus label="Privacy" value="Ready" />
+            <MiniStatus label="Security" value="In review" />
+            <MiniStatus label="AI governance" value="Ready" />
+          </div>
         </div>
 
-        <div className="mt-8 rounded-3xl border border-white/10 bg-black/20 p-6">
-          <h3 className="font-bold">Recommended Next Step</h3>
+        <div className="rounded-2xl border border-cyan-400/15 bg-cyan-400/[0.05] p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-cyan-300">
+            Next recommendation
+          </p>
+          <h3 className="mt-3 text-lg font-bold text-white">
+            Complete your Vendor Register
+          </h3>
+          <p className="mt-2 text-sm leading-7 text-slate-400">
+            Add your payment, email, hosting, CRM, and AI providers to improve
+            vendor-governance readiness.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MiniStatus({ label, value }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="mt-1 text-sm font-bold text-white">{value}</p>
+    </div>
+  );
+}
+
+function DocumentsSection() {
+  return (
+    <section className="mt-24 grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+      <div>
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">
+          <FileText className="h-4 w-4" />
+          Governance Documents
+        </div>
+
+        <h2 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl">
+          More than a report. A complete governance document library.
+        </h2>
+
+        <p className="mt-6 max-w-xl text-base leading-8 text-slate-300 sm:text-lg">
+          Your assessment identifies the policies, plans, and registers your
+          business needs, then prepares them for review and approval.
+        </p>
+
+        <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.035] p-6">
+          <div className="flex items-start gap-4">
+            <Upload className="mt-0.5 h-5 w-5 shrink-0 text-cyan-300" />
+
+            <div>
+              <h3 className="font-bold text-white">
+                Download, copy, edit, or publish
+              </h3>
+              <p className="mt-2 text-sm leading-7 text-slate-400">
+                Keep your documents private, export them for your own website,
+                or publish approved versions through AEMA.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {documentItems.map((item) => (
+          <div
+            key={item}
+            className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-4"
+          >
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+            <span className="text-sm font-medium text-slate-300">
+              {item}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TrustCenterPreview() {
+  return (
+    <div className="mt-10 overflow-hidden rounded-[2.25rem] border border-white/10 bg-[#07111f] shadow-2xl shadow-black/30">
+      <div className="border-b border-white/10 px-6 py-4">
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <span className="h-2.5 w-2.5 rounded-full bg-rose-400/60" />
+          <span className="h-2.5 w-2.5 rounded-full bg-amber-400/60" />
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/60" />
+          <span className="ml-3 rounded-full border border-white/10 bg-black/20 px-4 py-1.5">
+            aemasystems.com/compliance/acme-business
+          </span>
+        </div>
+      </div>
+
+      <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <div>
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10">
+            <span className="text-lg font-black text-emerald-300">
+              AC
+            </span>
+          </div>
+
+          <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">
+            Acme Business
+          </p>
+
+          <h3 className="mt-3 text-3xl font-black text-white">
+            Trust Center
+          </h3>
+
           <p className="mt-4 text-sm leading-7 text-slate-400">
-            Generate your compliance and governance package for $49 CAD. You can
-            download your documents or create a hosted compliance web link with
-            AEMA Systems.
+            Learn how Acme Business approaches privacy, security, responsible
+            AI, accessibility, and governance.
           </p>
+        </div>
 
-          <button className="mt-6 w-full rounded-2xl bg-emerald-400 px-6 py-4 text-sm font-bold text-slate-950 transition hover:bg-emerald-300">
-            Generate Compliance & Governance — $49 CAD
-          </button>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {["Privacy", "Security", "Responsible AI", "Accessibility"].map(
+            (item) => (
+              <div
+                key={item}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+              >
+                <p className="text-sm font-bold text-white">
+                  {item}
+                </p>
+                <p className="mt-2 text-xs leading-6 text-slate-500">
+                  View the latest approved policy and review date.
+                </p>
+              </div>
+            )
+          )}
         </div>
       </div>
+    </div>
+  );
+}
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2">
-        <button className="rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-6 text-left transition hover:bg-cyan-400/15">
-          <Globe className="h-7 w-7 text-cyan-400" />
-          <h3 className="mt-4 text-xl font-bold">Create Hosted Weblink</h3>
-          <p className="mt-2 text-sm text-slate-400">
-            Host your compliance page with AEMA Systems.
-          </p>
-        </button>
+function PricingSection() {
+  return (
+    <section id="pricing" className="mt-24">
+      <SectionHeading
+        eyebrow="Simple pricing"
+        title="Start once. Upgrade only when ongoing hosting makes sense."
+        description="The one-time package gives you your documents and dashboard access. The optional monthly plan adds hosted publishing and continuous governance features."
+      />
 
-        <button className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 text-left transition hover:bg-white/[0.07]">
-          <Download className="h-7 w-7 text-emerald-400" />
-          <h3 className="mt-4 text-xl font-bold">Download Documents</h3>
-          <p className="mt-2 text-sm text-slate-400">
-            Download your generated compliance files.
-          </p>
-        </button>
+      <div className="mt-10 grid gap-6 lg:grid-cols-2">
+        <PricingCard
+          badge="One-time package"
+          title="Compliance Package"
+          price="$29.99"
+          cadence="CAD one-time"
+          description="Complete the assessment, unlock your tailored documents, and create your account."
+          items={oneTimePackageItems}
+          buttonLabel="Start Free Assessment"
+          buttonHref="/compliance-os/assessment"
+          featured
+        />
+
+        <PricingCard
+          badge="Optional subscription"
+          title="Compliance OS Pro"
+          price="$19.99"
+          cadence="CAD per month"
+          description="Host your branded Trust Center and continue managing governance from one dashboard."
+          items={proItems}
+          buttonLabel="Available after account creation"
+          disabled
+        />
       </div>
-    </div>
+    </section>
   );
 }
 
-function ScoreCard({ label, value }) {
+function PricingCard({
+  badge,
+  title,
+  price,
+  cadence,
+  description,
+  items,
+  buttonLabel,
+  buttonHref,
+  featured = false,
+  disabled = false,
+}) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-black/20 p-6">
-      <p className="text-sm text-slate-400">{label}</p>
-      <h3 className="mt-2 text-4xl font-black">{value}</h3>
-    </div>
+    <article
+      className={`rounded-[2rem] border p-7 sm:p-8 ${
+        featured
+          ? "border-emerald-400/25 bg-emerald-400/[0.055]"
+          : "border-white/10 bg-white/[0.035]"
+      }`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span
+          className={`rounded-full border px-3 py-1 text-xs font-bold ${
+            featured
+              ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+              : "border-cyan-400/20 bg-cyan-400/10 text-cyan-300"
+          }`}
+        >
+          {badge}
+        </span>
+
+        {featured && (
+          <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-semibold text-slate-400">
+            Start here
+          </span>
+        )}
+      </div>
+
+      <h3 className="mt-6 text-2xl font-black text-white">
+        {title}
+      </h3>
+
+      <div className="mt-4 flex items-end gap-2">
+        <span className="text-5xl font-black tracking-tight text-white">
+          {price}
+        </span>
+        <span className="pb-1 text-sm font-semibold text-slate-400">
+          {cadence}
+        </span>
+      </div>
+
+      <p className="mt-5 text-sm leading-7 text-slate-400">
+        {description}
+      </p>
+
+      <div className="mt-6 space-y-3">
+        {items.map((item) => (
+          <div
+            key={item}
+            className="flex items-start gap-3 text-sm leading-7 text-slate-300"
+          >
+            <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+
+      {disabled ? (
+        <button
+          type="button"
+          disabled
+          className="mt-7 inline-flex w-full cursor-not-allowed items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-4 text-sm font-bold text-slate-500"
+        >
+          {buttonLabel}
+        </button>
+      ) : (
+        <Link
+          to={buttonHref}
+          className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-6 py-4 text-sm font-black text-slate-950 transition hover:bg-emerald-300"
+        >
+          {buttonLabel}
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      )}
+    </article>
   );
 }
 
-function Panel({ title, children }) {
+function SectionHeading({ eyebrow, title, description }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-black/20 p-6">
-      <h3 className="font-bold">{title}</h3>
-      <div className="mt-4 grid gap-3">{children}</div>
+    <div className="mx-auto max-w-3xl text-center">
+      <p className="text-xs font-bold uppercase tracking-[0.24em] text-emerald-300">
+        {eyebrow}
+      </p>
+
+      <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">
+        {title}
+      </h2>
+
+      <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
+        {description}
+      </p>
     </div>
   );
 }

@@ -3,42 +3,75 @@ export const frameworks = [
     id: "pipeda",
     name: "PIPEDA",
     region: "Canada",
-    description: "Canadian privacy readiness for businesses handling personal information.",
+    priority: "High",
+    applicable: "automatic",
+    description:
+      "Canadian privacy readiness for businesses that collect, use, or disclose personal information in commercial activities.",
   },
+
   {
     id: "phipa",
     name: "PHIPA",
     region: "Ontario, Canada",
-    description: "Ontario health information privacy readiness.",
+    priority: "High",
+    applicable: "conditional",
+    description:
+      "Ontario health information privacy readiness for healthcare custodians and organizations handling personal health information.",
   },
+
   {
     id: "aoda",
     name: "AODA",
     region: "Ontario, Canada",
-    description: "Ontario accessibility readiness.",
+    priority: "Standard",
+    applicable: "conditional",
+    description:
+      "Ontario accessibility readiness for organizations operating in Ontario.",
   },
+
   {
     id: "soc2",
     name: "SOC 2",
     region: "Global",
-    description: "Security, availability, confidentiality, privacy, and processing integrity readiness.",
+    priority: "Recommended",
+    applicable: "recommended",
+    description:
+      "Security, availability, confidentiality, processing integrity, and privacy readiness for service organizations.",
   },
+
   {
     id: "iso27001",
     name: "ISO 27001",
     region: "Global",
-    description: "Information security management readiness.",
+    priority: "Recommended",
+    applicable: "recommended",
+    description:
+      "Information Security Management System (ISMS) readiness based on ISO 27001.",
   },
+
   {
     id: "gdpr",
     name: "GDPR",
     region: "European Union",
-    description: "European privacy and data protection readiness.",
+    priority: "Conditional",
+    applicable: "manual",
+    description:
+      "Privacy and data protection readiness for organizations offering goods or services to, or monitoring individuals in, the European Economic Area.",
   },
+
   {
     id: "pci",
     name: "PCI DSS",
     region: "Global",
-    description: "Payment card data security readiness.",
+    priority: "Conditional",
+    applicable: "conditional",
+    description:
+      "Payment Card Industry Data Security Standard readiness for organizations storing, processing, or transmitting payment card information.",
   },
+
+  
 ];
+
+export function getFramework(id) {
+  return frameworks.find((framework) => framework.id === id);
+}

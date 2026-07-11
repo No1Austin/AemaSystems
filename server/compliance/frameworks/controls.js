@@ -1,34 +1,40 @@
-export const frameworkControls = {
-  pipeda: [
+export const frameworkControls = Object.freeze({
+  pipeda: Object.freeze([
     "privacy_policy",
     "data_retention",
+    "security_policy",
+    "access_control",
     "incident_response",
     "vendor_register",
-    "security_policy",
-  ],
+  ]),
 
-  phipa: [
+  phipa: Object.freeze([
     "privacy_policy",
     "security_policy",
+    "password_policy",
     "access_control",
     "incident_response",
     "data_retention",
     "vendor_register",
-  ],
+    "risk_register",
+  ]),
 
-  aoda: ["accessibility"],
+  aoda: Object.freeze([
+    "accessibility",
+  ]),
 
-  gdpr: [
+  gdpr: Object.freeze([
     "privacy_policy",
     "cookie_policy",
     "data_retention",
-    "vendor_register",
+    "security_policy",
+    "access_control",
     "incident_response",
-  ],
+    "vendor_register",
+    "risk_register",
+  ]),
 
-  pci: ["security_policy", "vendor_register", "incident_response"],
-
-  soc2: [
+  pci: Object.freeze([
     "security_policy",
     "password_policy",
     "access_control",
@@ -37,16 +43,31 @@ export const frameworkControls = {
     "risk_register",
     "business_continuity",
     "disaster_recovery",
-  ],
+  ]),
 
-  iso27001: [
+  soc2: Object.freeze([
     "security_policy",
+    "password_policy",
+    "acceptable_use",
     "access_control",
+    "data_retention",
     "incident_response",
     "vendor_register",
     "risk_register",
     "business_continuity",
     "disaster_recovery",
+  ]),
+
+  iso27001: Object.freeze([
+    "security_policy",
+    "password_policy",
+    "acceptable_use",
+    "access_control",
     "data_retention",
-  ],
-};
+    "incident_response",
+    "vendor_register",
+    "risk_register",
+    "business_continuity",
+    "disaster_recovery",
+  ]),
+});

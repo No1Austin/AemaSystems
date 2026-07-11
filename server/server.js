@@ -1,58 +1,46 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+
 import complianceRoutes from "./routes/complianceRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import blueprintRoutes from "./routes/blueprintRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import compliancePaymentRoutes from "./routes/compliancePaymentRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
-/*
-|--------------------------------------------------------------------------
-| Allowed Origins
-|--------------------------------------------------------------------------
-*/
-
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-
-  // Production
   "https://aemasystems.com",
   "https://www.aemasystems.com",
-
-  // Render Backend
   "https://aemasystems-1.onrender.com",
 ];
 
 /*
 |--------------------------------------------------------------------------
-| Stripe Webhook
+| Stripe Webhook Raw Body
 |--------------------------------------------------------------------------
-| Stripe requires the raw body BEFORE express.json()
+| This must stay before express.json().
+| Final webhook URL:
+| https://aemasystems-1.onrender.com/api/payments/webhook
 */
 
 app.use(
   "/api/payments/webhook",
   express.raw({
     type: "application/json",
+    limit: "2mb",
   })
 );
 
-/*
-|--------------------------------------------------------------------------
-| CORS
-|--------------------------------------------------------------------------
-*/
-
 const corsOptions = {
   origin(origin, callback) {
-    // Allow Postman, curl, server-to-server requests
     if (!origin) {
       return callback(null, true);
     }
@@ -66,9 +54,11 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    console.error("❌ Blocked by CORS:", origin);
+    console.error("Blocked by CORS:", origin);
 
-    return callback(new Error(`Not allowed by CORS: ${origin}`));
+    return callback(
+      new Error(`Not allowed by CORS: ${origin}`)
+    );
   },
 
   credentials: true,
@@ -91,33 +81,29 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-/*
-|--------------------------------------------------------------------------
-| Body Parser
-|--------------------------------------------------------------------------
-*/
-
 app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
-
-/*
-|--------------------------------------------------------------------------
-| Health Check
-|--------------------------------------------------------------------------
-*/
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "10mb",
+  })
+);
 
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
     service: "AEMA Systems API",
     status: "Running",
     version: "1.0.0",
+    environment:
+      process.env.NODE_ENV || "development",
   });
 });
 
 app.get("/health", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
+    service: "AEMA Systems API",
     status: "Healthy",
     timestamp: new Date().toISOString(),
   });
@@ -127,18 +113,26 @@ app.get("/health", (req, res) => {
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
+| All routes must be registered before the 404 handler.
 */
 
 app.use("/api/ai", aiRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/blueprint", blueprintRoutes);
+
 app.use("/api/payments", paymentRoutes);
+
+app.use(
+  "/api/compliance/payments",
+  compliancePaymentRoutes
+);
+
 app.use("/api/reports", reportRoutes);
 app.use("/api/compliance", complianceRoutes);
 
 /*
 |--------------------------------------------------------------------------
-| 404
+| 404 Handler
 |--------------------------------------------------------------------------
 */
 
@@ -146,6 +140,8 @@ app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: "Endpoint not found.",
+    method: req.method,
+    path: req.originalUrl,
   });
 });
 
@@ -155,30 +151,57 @@ app.use((req, res) => {
 |--------------------------------------------------------------------------
 */
 
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error(err);
+  console.error("Unhandled server error:", err);
 
-  res.status(err.status || 500).json({
+  const statusCode =
+    Number.isInteger(err?.status) &&
+    err.status >= 400 &&
+    err.status < 600
+      ? err.status
+      : 500;
+
+  res.status(statusCode).json({
     success: false,
-    message: err.message || "Internal Server Error",
+    message:
+      statusCode === 500 &&
+      process.env.NODE_ENV === "production"
+        ? "Internal Server Error"
+        : err?.message || "Internal Server Error",
   });
 });
 
-/*
-|--------------------------------------------------------------------------
-| Server
-|--------------------------------------------------------------------------
-*/
-
 const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`
 =========================================
-🚀 AEMA Systems API Started
+AEMA Systems API Started
 =========================================
 Environment : ${process.env.NODE_ENV || "development"}
 Port        : ${PORT}
+Webhook     : /api/payments/webhook
+Compliance  : /api/compliance/payments
 =========================================
 `);
 });
+
+function shutdown(signal) {
+  console.log(`\n${signal} received. Shutting down...`);
+
+  server.close((error) => {
+    if (error) {
+      console.error("Error during shutdown:", error);
+      process.exit(1);
+    }
+
+    console.log("HTTP server closed.");
+    process.exit(0);
+  });
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+export default app;

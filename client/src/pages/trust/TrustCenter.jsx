@@ -1,9 +1,9 @@
+import { Link } from "react-router-dom";
 import {
   ShieldCheck,
   Lock,
   FileText,
   Bot,
-  Scale,
   RefreshCcw,
   Mail,
   ArrowRight,
@@ -22,7 +22,7 @@ const trustCards = [
   {
     title: "Legal",
     description:
-      "Review AEMA Systems policies, terms, privacy commitments, refund rules, and accessibility standards.",
+      "Review AEMA Systems policies, terms, privacy commitments, and legal standards.",
     icon: FileText,
     href: "/trust/privacy",
     links: [
@@ -47,14 +47,6 @@ const trustCards = [
     links: [
       { label: "Responsible AI Policy", href: "/trust/responsible-ai" },
     ],
-  },
-  {
-    title: "Compliance",
-    description:
-      "See AEMA Systems’ commitment to operating responsibly as a trusted business technology company.",
-    icon: Scale,
-    href: "/trust/compliance",
-    links: [{ label: "Compliance Overview", href: "/trust/compliance" }],
   },
 ];
 
@@ -89,8 +81,8 @@ export default function TrustCenter() {
 
             <p className="mt-6 text-base leading-8 text-slate-300 md:text-lg">
               At AEMA Systems, trust is part of everything we build. We are
-              committed to protecting data, operating transparently, and using AI
-              responsibly to support business growth.
+              committed to protecting data, operating transparently, and using
+              AI responsibly to support business growth.
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -124,13 +116,13 @@ export default function TrustCenter() {
                       <Icon className="h-6 w-6 text-emerald-400" />
                     </div>
 
-                    <a
-                      href={card.href}
+                    <Link
+                      to={card.href}
                       className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-400 transition hover:text-emerald-300"
                     >
                       View
                       <ArrowRight className="h-4 w-4" />
-                    </a>
+                    </Link>
                   </div>
 
                   <h2 className="mt-5 text-2xl font-bold text-white">
@@ -143,14 +135,14 @@ export default function TrustCenter() {
 
                   <div className="mt-6 grid gap-3">
                     {card.links.map((link) => (
-                      <a
+                      <Link
                         key={link.label}
-                        href={link.href}
+                        to={link.href}
                         className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-300 transition hover:border-emerald-400/30 hover:text-emerald-400"
                       >
                         {link.label}
                         <ArrowRight className="h-4 w-4" />
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 </div>
