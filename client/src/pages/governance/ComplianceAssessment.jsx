@@ -51,15 +51,6 @@ export default function ComplianceAssessment() {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("idle");
 
-  const [checkoutEmail, setCheckoutEmail] = useState(() =>
-    cleanText(
-      readStoredJson(STORAGE_KEYS.answers)?.email ||
-        readStoredJson(STORAGE_KEYS.answers)?.businessEmail ||
-        readStoredJson(STORAGE_KEYS.answers)?.contactEmail ||
-        readStoredJson(STORAGE_KEYS.answers)?.emailAddress
-    )
-  );
-
   const businessProfile = useMemo(() => {
     if (!answers) return null;
 
@@ -72,9 +63,9 @@ export default function ComplianceAssessment() {
           .join(", ") || "Not specified",
       employees: cleanText(answers.employees) || "Not specified",
       website: cleanText(answers.website) || "Not provided",
-      email: cleanText(checkoutEmail) || "Not provided",
+      email: cleanText(answers.email) || "Not provided",
     };
-  }, [answers, checkoutEmail]);
+  }, [answers]);
 
   async function handleAssessmentComplete(completedAnswers) {
     setEvaluating(true);
@@ -108,15 +99,6 @@ export default function ComplianceAssessment() {
       setResult(evaluatedResult);
       setAssessmentId("");
       setStatus("success");
-
-      setCheckoutEmail(
-        cleanText(
-          completedAnswers.email ||
-            completedAnswers.businessEmail ||
-            completedAnswers.contactEmail ||
-            completedAnswers.emailAddress
-        )
-      );
 
       writeStoredJson(STORAGE_KEYS.answers, completedAnswers);
       writeStoredJson(STORAGE_KEYS.result, evaluatedResult);
@@ -161,7 +143,7 @@ export default function ComplianceAssessment() {
       country: cleanText(answers.country),
       province: cleanText(answers.province),
       website: cleanText(answers.website),
-      business_email: cleanText(checkoutEmail),
+      business_email: cleanText(answers.email),
       employee_range: cleanText(answers.employees),
 
       compliance_score: Number(result.overallScore || 0),
@@ -176,10 +158,7 @@ export default function ComplianceAssessment() {
           .filter(Boolean),
       ].filter(Boolean),
 
-      answers: {
-        ...answers,
-        email: cleanText(checkoutEmail),
-      },
+      answers,
       business_profile: {
         name: businessProfile?.name,
         industry: businessProfile?.industry,
@@ -249,34 +228,7 @@ export default function ComplianceAssessment() {
     setMessage("");
 
     try {
-      const normalizedEmail =
-        cleanText(checkoutEmail);
-
-      if (!normalizedEmail) {
-        throw new Error(
-          "Enter your email address before continuing to payment."
-        );
-      }
-
-      if (!isValidEmail(normalizedEmail)) {
-        throw new Error(
-          "Enter a valid email address before continuing."
-        );
-      }
-
-      const updatedAnswers = {
-        ...answers,
-        email: normalizedEmail,
-      };
-
-      setAnswers(updatedAnswers);
-      writeStoredJson(
-        STORAGE_KEYS.answers,
-        updatedAnswers
-      );
-
-      const id =
-        await saveAssessmentForPayment();
+      const id = await saveAssessmentForPayment();
 
       const response = await fetch(
         `${API_URL}/api/compliance/payments/create-checkout-session`,
@@ -287,7 +239,7 @@ export default function ComplianceAssessment() {
           },
           body: JSON.stringify({
             assessmentId: id,
-            customerEmail: cleanText(checkoutEmail),
+            customerEmail: answers?.email || "",
           }),
         }
       );
@@ -351,7 +303,6 @@ if (!data.url) {
     setAnswers(null);
     setResult(null);
     setAssessmentId("");
-    setCheckoutEmail("");
     setMessage("");
     setStatus("idle");
 
@@ -409,17 +360,8 @@ if (!data.url) {
 
           <ScoreOverview result={result} />
 
-          <CheckoutCard
-            loading={startingCheckout}
-            message={message}
-            status={status}
-            email={checkoutEmail}
-            onEmailChange={setCheckoutEmail}
-            onCheckout={startCheckout}
-          />
-
-          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-            <div className="space-y-6">
+          <div className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
+            <div className="space-y-8">
               <BusinessProfileCard
                 profile={businessProfile}
               />
@@ -433,7 +375,7 @@ if (!data.url) {
               />
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
               <MissingDocumentsCard
                 documents={
                   result.missingDocuments || []
@@ -445,6 +387,13 @@ if (!data.url) {
               />
             </div>
           </div>
+
+          <CheckoutCard
+            loading={startingCheckout}
+            message={message}
+            status={status}
+            onCheckout={startCheckout}
+          />
 
           {result.disclaimer && (
             <p className="rounded-2xl border border-white/10 bg-white/[0.025] px-5 py-4 text-xs leading-6 text-slate-500">
@@ -806,194 +755,183 @@ function CheckoutCard({
   loading,
   message,
   status,
-  email,
-  onEmailChange,
   onCheckout,
 }) {
-  const plans = [
-    {
-      id: "package",
-      badge: "Start here",
-      title: "Compliance Package",
-      price: COMPLIANCE_PACKAGE_PRICE,
-      cadence: "CAD one-time",
-      description:
-        "Generate your documents, readiness report, and customer workspace.",
-      features: [
-        "Tailored documents",
-        "Readiness report",
-        "Download and copy",
-        "Account dashboard",
-      ],
-      featured: true,
-    },
-    {
-      id: "pro",
-      badge: "Optional later",
-      title: "Compliance OS Pro",
-      price: HOSTING_PLAN_PRICE,
-      cadence: "CAD/month",
-      description:
-        "Host your branded Trust Center and manage governance continuously.",
-      features: [
-        "Custom logo and colours",
-        "Public compliance link",
-        "Version history",
-        "Review reminders",
-      ],
-      featured: false,
-    },
+  const packageFeatures = [
+    "Personalized compliance documents",
+    "Executive readiness report",
+    "Risk and framework recommendations",
+    "Download and copy access",
+    "Customer account and document dashboard",
+  ];
+
+  const hostingFeatures = [
+    "Branded public Trust Center",
+    "Custom logo and colours",
+    "Shareable compliance URL",
+    "Ongoing governance dashboard",
+    "Review reminders and version history",
   ];
 
   return (
-    <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.025] p-4 sm:p-5">
-      <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">
-            Unlock your workspace
-          </p>
+    <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03]">
+      <div className="border-b border-white/10 bg-gradient-to-r from-emerald-400/[0.08] via-transparent to-cyan-400/[0.08] px-6 py-6 sm:px-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10">
+              <ShieldCheck className="h-6 w-6 text-emerald-300" />
+            </span>
 
-          <h3 className="mt-1 text-xl font-black text-white">
-            Choose your Compliance OS plan
-          </h3>
-        </div>
-
-        <span className="w-fit rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-[11px] font-semibold text-slate-400">
-          Secure Stripe checkout
-        </span>
-      </div>
-
-      <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-        <label className="block">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <span className="text-sm font-bold text-white">
-                Email for payment and account access
-              </span>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">
+                Unlock your workspace
+              </p>
 
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                We will use this for Stripe confirmation and to connect your
-                compliance package to your future account.
+              <h3 className="mt-2 text-2xl font-black text-white">
+                Choose how you want to use Compliance OS
+              </h3>
+
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-400">
+                Start with the one-time compliance package. After account
+                creation, you can optionally activate ongoing hosted governance.
               </p>
             </div>
+          </div>
 
-            <span className="w-fit rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-cyan-300">
-              Required
+          <span className="w-fit rounded-full border border-white/10 bg-black/20 px-4 py-2 text-xs font-semibold text-slate-400">
+            Secure Stripe checkout
+          </span>
+        </div>
+      </div>
+
+      <div className="grid gap-6 p-6 lg:grid-cols-2 sm:p-8">
+        <article className="relative overflow-hidden rounded-[1.75rem] border border-emerald-400/25 bg-emerald-400/[0.055] p-6">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/60 to-transparent" />
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-bold text-emerald-300">
+              Start here
+            </span>
+
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+              One-time payment
             </span>
           </div>
 
-          <input
-            type="email"
-            value={email}
-            onChange={(event) =>
-              onEmailChange(event.target.value)
-            }
-            placeholder="you@business.com"
-            autoComplete="email"
-            className="mt-3 w-full rounded-xl border border-white/10 bg-[#091321] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-400/60 focus:ring-4 focus:ring-emerald-400/10"
-          />
-        </label>
-      </div>
+          <h4 className="mt-5 text-xl font-black text-white">
+            AEMA Compliance Package
+          </h4>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        {plans.map((plan) => (
-          <article
-            key={plan.id}
-            className={`rounded-2xl border p-4 sm:p-5 ${
-              plan.featured
-                ? "border-emerald-400/25 bg-emerald-400/[0.05]"
-                : "border-cyan-400/20 bg-cyan-400/[0.035]"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <span
-                  className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${
-                    plan.featured
-                      ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
-                      : "border-cyan-400/20 bg-cyan-400/10 text-cyan-300"
-                  }`}
-                >
-                  {plan.badge}
-                </span>
+          <div className="mt-4 flex items-end gap-2">
+            <span className="text-5xl font-black tracking-tight text-white">
+              {COMPLIANCE_PACKAGE_PRICE}
+            </span>
 
-                <h4 className="mt-3 text-base font-black text-white">
-                  {plan.title}
-                </h4>
-              </div>
+            <span className="pb-1 text-sm font-semibold text-slate-500">
+              CAD
+            </span>
+          </div>
 
-              <div className="text-right">
-                <p className="text-2xl font-black tracking-tight text-white">
-                  {plan.price}
-                </p>
+          <p className="mt-4 text-sm leading-7 text-slate-400">
+            Generate your tailored documents, create your customer account,
+            and access your compliance workspace.
+          </p>
 
-                <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
-                  {plan.cadence}
-                </p>
-              </div>
-            </div>
-
-            <p className="mt-3 text-xs leading-6 text-slate-400">
-              {plan.description}
-            </p>
-
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {plan.features.map((feature) => (
-                <div
-                  key={feature}
-                  className="flex items-center gap-2 text-xs text-slate-300"
-                >
-                  <CheckCircle2
-                    className={`h-3.5 w-3.5 shrink-0 ${
-                      plan.featured
-                        ? "text-emerald-400"
-                        : "text-cyan-300"
-                    }`}
-                  />
-
-                  <span>{feature}</span>
-                </div>
-              ))}
-            </div>
-
-            {plan.featured ? (
-              <button
-                type="button"
-                onClick={onCheckout}
-                disabled={loading}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-4 py-3 text-xs font-black text-slate-950 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+          <div className="mt-6 space-y-3">
+            {packageFeatures.map((feature) => (
+              <div
+                key={feature}
+                className="flex items-start gap-3 text-sm leading-6 text-slate-300"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Opening checkout...
-                  </>
-                ) : (
-                  <>
-                    Get Compliance Package
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-            ) : (
-              <div className="mt-4 rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-center text-[11px] font-semibold text-slate-500">
-                Available after account creation
+                <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
+                <span>{feature}</span>
               </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={onCheckout}
+            disabled={loading}
+            className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-5 py-4 text-sm font-black text-slate-950 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Opening secure checkout...
+              </>
+            ) : (
+              <>
+                Generate My Compliance Package
+                <ArrowRight className="h-4 w-4" />
+              </>
             )}
-          </article>
-        ))}
+          </button>
+        </article>
+
+        <article className="rounded-[1.75rem] border border-cyan-400/20 bg-cyan-400/[0.045] p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-bold text-cyan-300">
+              Optional upgrade
+            </span>
+
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+              After account creation
+            </span>
+          </div>
+
+          <h4 className="mt-5 text-xl font-black text-white">
+            Compliance OS Pro
+          </h4>
+
+          <div className="mt-4 flex items-end gap-2">
+            <span className="text-5xl font-black tracking-tight text-white">
+              {HOSTING_PLAN_PRICE}
+            </span>
+
+            <span className="pb-1 text-sm font-semibold text-slate-500">
+              CAD/month
+            </span>
+          </div>
+
+          <p className="mt-4 text-sm leading-7 text-slate-400">
+            Keep your branded Trust Center hosted with AEMA and manage
+            governance continuously.
+          </p>
+
+          <div className="mt-6 space-y-3">
+            {hostingFeatures.map((feature) => (
+              <div
+                key={feature}
+                className="flex items-start gap-3 text-sm leading-6 text-slate-300"
+              >
+                <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-cyan-300" />
+                <span>{feature}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-7 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-center text-xs font-semibold text-slate-500">
+            Available from your dashboard after purchasing the package
+          </div>
+        </article>
       </div>
 
       {message && (
-        <StatusMessage
-          status={status}
-          message={message}
-        />
+        <div className="px-6 pb-6 sm:px-8 sm:pb-8">
+          <StatusMessage
+            status={status}
+            message={message}
+          />
+        </div>
       )}
 
-      <p className="mt-3 text-center text-[10px] leading-5 text-slate-500">
-        Your saved assessment remains available until payment succeeds.
-      </p>
+      <div className="border-t border-white/10 px-6 py-4 text-center sm:px-8">
+        <p className="text-[11px] leading-5 text-slate-500">
+          Payment is processed securely through Stripe. Your questionnaire and
+          readiness result remain saved in this browser until payment succeeds.
+        </p>
+      </div>
     </section>
   );
 }
@@ -1090,12 +1028,6 @@ function deriveOverallRiskLevel(risks = []) {
   if (levels.has("high")) return "High";
   if (levels.has("medium")) return "Medium";
   return "Low";
-}
-
-function isValidEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-    String(value || "").trim().toLowerCase()
-  );
 }
 
 function cleanText(value) {

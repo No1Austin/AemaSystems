@@ -160,7 +160,7 @@ export default function Footer() {
                 href="mailto:austin@aemasystems.com"
                 className="transition hover:text-cyan-400"
               >
-                austin@aemasystems.com
+                support@aemasystems.com
               </a>
 
               <a

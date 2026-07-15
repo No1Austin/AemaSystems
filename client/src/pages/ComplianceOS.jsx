@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -15,7 +16,7 @@ import {
   Palette,
   ShieldCheck,
   Sparkles,
-  WandSparkles,
+  X,
 } from "lucide-react";
 
 import Navbar from "../components/Navbar";
@@ -79,17 +80,6 @@ const processSteps = [
   },
 ];
 
-const packageItems = [
-  "Personalized compliance and governance documents",
-  "Executive readiness and risk summary",
-  "Framework readiness results",
-  "Recommended next actions",
-  "Downloadable compliance package",
-  "Customizable public compliance page",
-  "AEMA-hosted publishing option",
-  "Shareable link for your existing website",
-];
-
 const publishingOptions = [
   {
     icon: Palette,
@@ -149,28 +139,6 @@ const dashboardMetrics = [
   },
 ];
 
-const oneTimePackageItems = [
-  "AI-guided compliance assessment",
-  "Executive readiness and risk summary",
-  "Framework readiness results",
-  "Personalized compliance documents",
-  "Download and copy documents",
-  "Lifetime access to generated files",
-  "Customer account and document dashboard",
-];
-
-const proItems = [
-  "Hosted public Trust Center",
-  "Custom company logo",
-  "Custom brand colours",
-  "Public compliance URL",
-  "Policy publishing controls",
-  "Version history",
-  "Review reminders",
-  "Ongoing governance dashboard",
-  "Risk and vendor registers",
-];
-
 const documentItems = [
   "Privacy Policy",
   "Cookie Policy",
@@ -187,25 +155,32 @@ const documentItems = [
 ];
 
 export default function ComplianceOS() {
+  const [pricingOpen, setPricingOpen] = useState(false);
+
   return (
-    <main className="min-h-screen overflow-hidden bg-[#050816] text-white">
+    <main className="relative min-h-screen overflow-hidden bg-[#050816] text-white">
+      <div className="pointer-events-none fixed inset-0">
+        <div className="absolute inset-0 opacity-[0.025] [background-image:linear-gradient(rgba(255,255,255,.45)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.45)_1px,transparent_1px)] [background-size:48px_48px]" />
+        <div className="absolute left-[8%] top-0 h-[520px] w-[520px] rounded-full bg-emerald-400/[0.07] blur-[140px]" />
+        <div className="absolute right-[4%] top-[18%] h-[560px] w-[560px] rounded-full bg-cyan-400/[0.065] blur-[150px]" />
+        <div className="absolute bottom-[8%] left-1/3 h-[480px] w-[480px] rounded-full bg-teal-400/[0.04] blur-[150px]" />
+      </div>
       <Navbar />
 
       <section className="relative px-5 pb-24 pt-28 sm:px-6 lg:pt-32">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-x-0 top-0 h-[720px] bg-[radial-gradient(circle_at_18%_15%,rgba(16,185,129,0.20),transparent_31%),radial-gradient(circle_at_83%_17%,rgba(34,211,238,0.16),transparent_30%)]" />
-          <div className="absolute left-1/2 top-0 h-[680px] w-px bg-gradient-to-b from-cyan-300/20 via-transparent to-transparent" />
-          <div className="absolute left-1/2 top-[560px] h-96 w-[900px] -translate-x-1/2 rounded-full bg-emerald-500/[0.05] blur-3xl" />
+          <div className="absolute inset-x-0 top-0 h-[720px] bg-[radial-gradient(circle_at_20%_16%,rgba(16,185,129,0.14),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(34,211,238,0.11),transparent_34%)]" />
+          <div className="absolute left-1/2 top-[520px] h-80 w-[760px] -translate-x-1/2 rounded-full bg-emerald-500/[0.035] blur-[110px]" />
         </div>
 
         <div className="relative mx-auto max-w-7xl">
-          <HeroSection />
+          <HeroSection onOpenPricing={() => setPricingOpen(true)} />
 
           <section className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {trustPoints.map((item) => (
               <div
                 key={item}
-                className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm font-semibold text-slate-300 backdrop-blur"
+                className="flex items-center justify-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.025] px-4 py-3 text-sm font-semibold text-slate-300 backdrop-blur transition hover:border-emerald-400/15 hover:bg-white/[0.04]"
               >
                 <Check className="h-4 w-4 text-emerald-300" />
                 {item}
@@ -229,9 +204,9 @@ export default function ComplianceOS() {
                 return (
                   <article
                     key={item.title}
-                    className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-6 backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-emerald-400/30 hover:bg-white/[0.055]"
+                    className="group relative overflow-hidden rounded-[1.75rem] border border-white/[0.09] bg-gradient-to-br from-white/[0.04] to-white/[0.018] p-6 backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-emerald-400/20 hover:bg-white/[0.05] hover:shadow-[0_24px_70px_rgba(0,0,0,0.20)]"
                   >
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent opacity-0 transition group-hover:opacity-100" />
+                    <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-emerald-400/[0.04] blur-3xl transition group-hover:bg-emerald-400/[0.07]" />
 
                     <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10">
                       <Icon className="h-6 w-6 text-emerald-300" />
@@ -296,13 +271,11 @@ export default function ComplianceOS() {
             </div>
 
             <div className="relative">
-              <div className="absolute left-[21px] top-10 hidden h-[calc(100%-80px)] w-px bg-gradient-to-b from-emerald-400/50 via-cyan-400/30 to-transparent sm:block" />
-
               <div className="grid gap-4">
                 {processSteps.map((step) => (
                   <article
                     key={step.number}
-                    className="relative flex gap-4 rounded-[1.75rem] border border-white/10 bg-black/20 p-5 transition hover:border-white/20 hover:bg-white/[0.03] sm:p-6"
+                    className="group relative flex gap-4 overflow-hidden rounded-[1.75rem] border border-white/[0.09] bg-gradient-to-r from-black/20 to-white/[0.02] p-5 transition hover:border-cyan-400/18 hover:bg-white/[0.035] sm:p-6"
                   >
                     <span className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/20 bg-[#07111f] text-sm font-black text-emerald-300">
                       {step.number}
@@ -339,7 +312,7 @@ export default function ComplianceOS() {
                 return (
                   <article
                     key={option.title}
-                    className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-7"
+                    className="relative overflow-hidden rounded-[1.75rem] border border-white/[0.09] bg-gradient-to-br from-white/[0.04] to-white/[0.018] p-7 transition hover:border-cyan-400/18 hover:bg-white/[0.05]"
                   >
                     <div className="flex items-center justify-between gap-4">
                       <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
@@ -366,9 +339,34 @@ export default function ComplianceOS() {
             <TrustCenterPreview />
           </section>
 
-          <PricingSection />
+          <section
+            id="pricing"
+            className="relative mt-24 overflow-hidden rounded-[2rem] border border-cyan-400/12 bg-gradient-to-br from-white/[0.04] via-white/[0.022] to-cyan-400/[0.025] px-6 py-12 text-center shadow-[0_28px_80px_rgba(0,0,0,0.22)] sm:px-10 sm:py-14"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-emerald-300">
+              Simple pricing
+            </p>
 
-          <section className="mt-24 rounded-[2rem] border border-white/10 bg-white/[0.035] px-6 py-12 text-center sm:px-10 sm:py-16">
+            <h2 className="mx-auto mt-4 max-w-3xl text-3xl font-black tracking-tight text-white sm:text-4xl">
+              Start once. Add hosting only when your business needs it.
+            </h2>
+
+            <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
+              Unlock your complete compliance package for $29.99 CAD, then add
+              optional hosted publishing for $19.99 CAD per month.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setPricingOpen(true)}
+              className="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-teal-400 px-7 py-4 text-sm font-black text-slate-950 shadow-[0_0_28px_rgba(34,211,238,0.20)] transition hover:brightness-110"
+            >
+              View Pricing
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </section>
+
+          <section className="relative mt-24 overflow-hidden rounded-[2rem] border border-emerald-400/12 bg-gradient-to-br from-emerald-400/[0.055] via-white/[0.025] to-cyan-400/[0.035] px-6 py-12 text-center shadow-[0_28px_80px_rgba(0,0,0,0.22)] sm:px-10 sm:py-16">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
               <ShieldCheck className="h-7 w-7 text-cyan-300" />
             </span>
@@ -393,15 +391,20 @@ export default function ComplianceOS() {
         </div>
       </section>
 
+      <PremiumPricingModal
+        open={pricingOpen}
+        onClose={() => setPricingOpen(false)}
+      />
+
       <Footer />
     </main>
   );
 }
 
-function HeroSection() {
+function HeroSection({ onOpenPricing }) {
   return (
     <div className="mx-auto max-w-5xl text-center">
-      <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-300">
+      <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.08] px-4 py-2 text-sm font-semibold text-emerald-300 shadow-[0_0_30px_rgba(52,211,153,0.06)] backdrop-blur">
         <ShieldCheck className="h-4 w-4" />
         AEMA Compliance OS
       </div>
@@ -423,19 +426,20 @@ function HeroSection() {
       <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Link
           to="/compliance-os/assessment"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-8 py-4 text-sm font-black text-slate-950 shadow-lg shadow-emerald-950/30 transition hover:bg-emerald-300 sm:w-auto"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-300 px-8 py-4 text-sm font-black text-slate-950 shadow-[0_18px_45px_rgba(16,185,129,0.14)] transition hover:brightness-105 sm:w-auto"
         >
           Start Free Assessment
           <ArrowRight className="h-4 w-4" />
         </Link>
 
-        <a
-          href="#pricing"
+        <button
+          type="button"
+          onClick={onOpenPricing}
           className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.045] px-8 py-4 text-sm font-bold text-white backdrop-blur transition hover:border-white/20 hover:bg-white/[0.08] sm:w-auto"
         >
           View Pricing
           <ChevronRight className="h-4 w-4" />
-        </a>
+        </button>
       </div>
 
       <p className="mt-5 text-sm font-medium text-slate-400">
@@ -449,7 +453,7 @@ function HeroSection() {
 
 function DashboardPreview() {
   return (
-    <section className="mt-20 rounded-[2.25rem] border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/30 sm:p-7 lg:p-8">
+    <section className="relative mt-20 overflow-hidden rounded-[2.25rem] border border-cyan-400/12 bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-cyan-400/[0.025] p-5 shadow-[0_32px_90px_rgba(0,0,0,0.30)] backdrop-blur sm:p-7 lg:p-8">
       <div className="flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
@@ -595,7 +599,7 @@ function DocumentsSection() {
 
 function TrustCenterPreview() {
   return (
-    <div className="mt-10 overflow-hidden rounded-[2.25rem] border border-white/10 bg-[#07111f] shadow-2xl shadow-black/30">
+    <div className="relative mt-10 overflow-hidden rounded-[2.25rem] border border-cyan-400/12 bg-gradient-to-br from-[#07111f] to-[#091422] shadow-[0_32px_90px_rgba(0,0,0,0.30)]">
       <div className="border-b border-white/10 px-6 py-4">
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <span className="h-2.5 w-2.5 rounded-full bg-rose-400/60" />
@@ -651,128 +655,188 @@ function TrustCenterPreview() {
   );
 }
 
-function PricingSection() {
+
+function PremiumPricingModal({ open, onClose }) {
+  if (!open) return null;
+
+  const plans = [
+    {
+      title: "Compliance Package",
+      label: "Start here",
+      price: "$29.99",
+      cadence: "CAD one-time",
+      description:
+        "Generate your tailored compliance documents and access your private dashboard.",
+      items: [
+        "AI-guided compliance assessment",
+        "Personalized governance documents",
+        "Executive readiness and risk summary",
+        "Framework readiness results",
+        "Download and copy documents",
+        "Lifetime access to generated files",
+      ],
+      featured: true,
+      buttonLabel: "Start Free Assessment",
+      href: "/compliance-os/assessment",
+    },
+    {
+      title: "Compliance OS Pro",
+      label: "Optional hosting",
+      price: "$19.99",
+      cadence: "CAD / month",
+      description:
+        "Publish and manage a branded public Trust Center for your business.",
+      items: [
+        "Hosted public Trust Center",
+        "Custom company logo",
+        "Custom brand colours",
+        "Public compliance link",
+        "Policy publishing controls",
+        "Review reminders and version history",
+      ],
+      featured: false,
+      buttonLabel: "Available after purchase",
+      disabled: true,
+    },
+  ];
+
   return (
-    <section id="pricing" className="mt-24">
-      <SectionHeading
-        eyebrow="Simple pricing"
-        title="Start once. Upgrade only when ongoing hosting makes sense."
-        description="The one-time package gives you your documents and dashboard access. The optional monthly plan adds hosted publishing and continuous governance features."
-      />
-
-      <div className="mt-10 grid gap-6 lg:grid-cols-2">
-        <PricingCard
-          badge="One-time package"
-          title="Compliance Package"
-          price="$29.99"
-          cadence="CAD one-time"
-          description="Complete the assessment, unlock your tailored documents, and create your account."
-          items={oneTimePackageItems}
-          buttonLabel="Start Free Assessment"
-          buttonHref="/compliance-os/assessment"
-          featured
-        />
-
-        <PricingCard
-          badge="Optional subscription"
-          title="Compliance OS Pro"
-          price="$19.99"
-          cadence="CAD per month"
-          description="Host your branded Trust Center and continue managing governance from one dashboard."
-          items={proItems}
-          buttonLabel="Available after account creation"
-          disabled
-        />
-      </div>
-    </section>
-  );
-}
-
-function PricingCard({
-  badge,
-  title,
-  price,
-  cadence,
-  description,
-  items,
-  buttonLabel,
-  buttonHref,
-  featured = false,
-  disabled = false,
-}) {
-  return (
-    <article
-      className={`rounded-[2rem] border p-7 sm:p-8 ${
-        featured
-          ? "border-emerald-400/25 bg-emerald-400/[0.055]"
-          : "border-white/10 bg-white/[0.035]"
-      }`}
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/80 px-4 py-6 backdrop-blur-md"
+      onMouseDown={onClose}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span
-          className={`rounded-full border px-3 py-1 text-xs font-bold ${
-            featured
-              ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
-              : "border-cyan-400/20 bg-cyan-400/10 text-cyan-300"
-          }`}
-        >
-          {badge}
-        </span>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pricing-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+        className="relative my-auto w-full max-w-3xl overflow-hidden rounded-[1.75rem] border border-cyan-400/15 bg-[#070b12] p-5 shadow-[0_30px_100px_rgba(0,0,0,0.75)] sm:p-7"
+      >
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.14),transparent_68%)]" />
+          <div className="absolute inset-0 opacity-[0.025] [background-image:linear-gradient(rgba(255,255,255,.4)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.4)_1px,transparent_1px)] [background-size:36px_36px]" />
+        </div>
 
-        {featured && (
-          <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-semibold text-slate-400">
-            Start here
-          </span>
-        )}
-      </div>
-
-      <h3 className="mt-6 text-2xl font-black text-white">
-        {title}
-      </h3>
-
-      <div className="mt-4 flex items-end gap-2">
-        <span className="text-5xl font-black tracking-tight text-white">
-          {price}
-        </span>
-        <span className="pb-1 text-sm font-semibold text-slate-400">
-          {cadence}
-        </span>
-      </div>
-
-      <p className="mt-5 text-sm leading-7 text-slate-400">
-        {description}
-      </p>
-
-      <div className="mt-6 space-y-3">
-        {items.map((item) => (
-          <div
-            key={item}
-            className="flex items-start gap-3 text-sm leading-7 text-slate-300"
-          >
-            <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
-            <span>{item}</span>
-          </div>
-        ))}
-      </div>
-
-      {disabled ? (
         <button
           type="button"
-          disabled
-          className="mt-7 inline-flex w-full cursor-not-allowed items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-4 text-sm font-bold text-slate-500"
+          onClick={onClose}
+          aria-label="Close pricing modal"
+          className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-slate-400 transition hover:bg-white/10 hover:text-white"
         >
-          {buttonLabel}
+          <X className="h-4 w-4" />
         </button>
-      ) : (
-        <Link
-          to={buttonHref}
-          className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-6 py-4 text-sm font-black text-slate-950 transition hover:bg-emerald-300"
-        >
-          {buttonLabel}
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      )}
-    </article>
+
+        <div className="relative mx-auto max-w-xl text-center">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-300">
+            Simple pricing
+          </p>
+
+          <h2
+            id="pricing-modal-title"
+            className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl"
+          >
+            Choose how you use Compliance OS
+          </h2>
+
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-400">
+            Pay once for your tailored compliance package. Add monthly hosting
+            only when your business needs a public Trust Center.
+          </p>
+        </div>
+
+        <div className="relative mt-7 grid gap-4 md:grid-cols-2">
+          {plans.map((plan) => (
+            <article
+              key={plan.title}
+              className={`relative overflow-hidden rounded-[1.5rem] border p-5 transition sm:p-6 ${
+                plan.featured
+                  ? "border-cyan-400/70 bg-gradient-to-b from-cyan-400/[0.08] to-white/[0.025] shadow-[0_0_45px_rgba(34,211,238,0.08)]"
+                  : "border-white/10 bg-white/[0.025]"
+              }`}
+            >
+              {plan.featured && (
+                <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
+              )}
+
+              <div className="flex items-center justify-between gap-3">
+                <span
+                  className={`rounded-full border px-3 py-1 text-[11px] font-bold ${
+                    plan.featured
+                      ? "border-cyan-400/25 bg-cyan-400/10 text-cyan-300"
+                      : "border-white/10 bg-white/[0.04] text-slate-400"
+                  }`}
+                >
+                  {plan.label}
+                </span>
+
+                {plan.featured && (
+                  <span className="rounded-full bg-cyan-400 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-slate-950">
+                    Recommended
+                  </span>
+                )}
+              </div>
+
+              <h3 className="mt-5 text-xl font-bold text-white">
+                {plan.title}
+              </h3>
+
+              <p className="mt-1.5 min-h-[44px] text-sm leading-6 text-slate-400">
+                {plan.description}
+              </p>
+
+              <div className="mt-5 flex items-end gap-2">
+                <span className="text-4xl font-black tracking-tight text-white">
+                  {plan.price}
+                </span>
+
+                <span className="pb-1 text-xs font-medium text-slate-500">
+                  {plan.cadence}
+                </span>
+              </div>
+
+              {plan.disabled ? (
+                <button
+                  type="button"
+                  disabled
+                  className="mt-5 flex w-full cursor-not-allowed items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-bold text-slate-500"
+                >
+                  {plan.buttonLabel}
+                </button>
+              ) : (
+                <Link
+                  to={plan.href}
+                  onClick={onClose}
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-teal-400 px-4 py-3 text-sm font-black text-slate-950 shadow-[0_0_25px_rgba(34,211,238,0.22)] transition hover:brightness-110"
+                >
+                  {plan.buttonLabel}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
+
+              <div className="mt-6 space-y-3 border-t border-white/10 pt-5">
+                {plan.items.map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-start gap-2.5 text-xs leading-5 text-slate-400"
+                  >
+                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-white/20">
+                      <Check className="h-2.5 w-2.5 text-cyan-300" />
+                    </span>
+
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <p className="relative mt-5 text-center text-xs text-slate-500">
+          Prices are in CAD. The compliance package is a one-time payment.
+          Hosting is optional and billed monthly.
+        </p>
+      </div>
+    </div>
   );
 }
 

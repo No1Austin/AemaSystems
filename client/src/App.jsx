@@ -1,11 +1,11 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-
+import ComplianceHostingStudio from "./pages/governance/ComplianceHostingStudio";
 import Home from "./pages/Home";
 import GrowthBlueprint from "./pages/GrowthBlueprint";
 import AemaAI from "./pages/AemaAI";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import ComplianceOS from "./pages/ComplianceOS";
-
+import PublicComplianceProfile from "./pages/governance/PublicComplianceProfile";
 import AdminLogin from "./pages/auth/AdminLogin";
 import ProtectedAdminRoute from "./components/auth/ProtectedAdminRoute";
 
@@ -33,7 +33,9 @@ import GovernanceReviews from "./pages/governance/GovernanceReviews";
 import GovernanceSettings from "./pages/governance/GovernanceSettings";
 import GovernancePolicyEditor from "./pages/governance/GovernancePolicyEditor";
 import PolicyVersionHistory from "./pages/governance/PolicyVersionHistory";
-
+import ComplianceDashboard from "./pages/governance/ComplianceDashboard";
+import ComplianceDocuments from "./pages/governance/ComplianceDocuments";
+import ComplianceDocumentViewer from "./pages/governance/ComplianceDocumentViewer";
 import ComplianceAssessment from "./pages/governance/ComplianceAssessment";
 import CompliancePaymentSuccess from "./pages/governance/CompliancePaymentSuccess";
 
@@ -135,6 +137,40 @@ export default function App() {
             </ProtectedAdminRoute>
           }
         />
+<Route
+  path="/compliance-dashboard"
+  element={<ComplianceDashboard />}
+/>
+
+<Route
+  path="/compliance-dashboard/documents"
+  element={<ComplianceDocuments />}
+/>
+
+<Route
+  path="/compliance-dashboard/documents/:slug"
+  element={<ComplianceDocumentViewer />}
+/>
+<Route
+  path="/compliance-dashboard/hosting-success"
+  element={<ComplianceHostingStudio />}
+/>
+
+
+<Route
+  path="/compliance/:slug"
+  element={<PublicComplianceProfile />}
+/>
+<Route
+  path="/compliance-dashboard/hosting-success"
+  element={<ComplianceHostingStudio />}
+/>
+
+
+<Route
+  path="/compliance-dashboard/trust-center"
+  element={<ComplianceHostingStudio />}
+/>
 
         <Route
           path="/governance/documents/:slug/history"

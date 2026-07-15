@@ -27,7 +27,6 @@ const publicNavigationItems = [
     path: "/compliance-os/assessment",
     icon: ClipboardCheck,
   },
- 
 ];
 
 const workspaceNavigationItems = [
