@@ -17,22 +17,117 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = [
+const PORT = Number(process.env.PORT) || 8000;
+const NODE_ENV = process.env.NODE_ENV || "development";
+const IS_PRODUCTION = NODE_ENV === "production";
+
+const requiredEnvironmentVariables = [
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+];
+
+const missingEnvironmentVariables = requiredEnvironmentVariables.filter(
+  (name) => !process.env[name]
+);
+
+if (missingEnvironmentVariables.length > 0) {
+  console.error(
+    `Missing required environment variables: ${missingEnvironmentVariables.join(
+      ", "
+    )}`
+  );
+
+  if (IS_PRODUCTION) {
+    process.exit(1);
+  }
+}
+
+app.set("trust proxy", 1);
+app.disable("x-powered-by");
+
+const allowedOrigins = new Set([
   "http://localhost:5173",
   "http://localhost:5174",
   "https://aemasystems.com",
   "https://www.aemasystems.com",
   "https://aemasystems-1.onrender.com",
-];
+]);
+
+function isAllowedOrigin(origin) {
+  if (!origin) {
+    return true;
+  }
+
+  if (allowedOrigins.has(origin)) {
+    return true;
+  }
+
+  try {
+    const parsedOrigin = new URL(origin);
+
+    return (
+      parsedOrigin.protocol === "https:" &&
+      parsedOrigin.hostname.endsWith(".vercel.app")
+    );
+  } catch {
+    return false;
+  }
+}
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+
+    console.error("Blocked by CORS:", origin);
+
+    const error = new Error(`Not allowed by CORS: ${origin}`);
+    error.status = 403;
+
+    return callback(error);
+  },
+
+  credentials: true,
+
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Stripe-Signature",
+    "Idempotency-Key",
+    "X-Request-Id",
+  ],
+
+  exposedHeaders: ["X-Request-Id"],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
+
+app.use((req, res, next) => {
+  const incomingRequestId = req.get("x-request-id");
+
+  const requestId =
+    incomingRequestId ||
+    `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+
+  req.requestId = requestId;
+  res.setHeader("X-Request-Id", requestId);
+
+  next();
+});
 
 /*
 |--------------------------------------------------------------------------
-| Stripe Webhook Raw Body
+| Stripe webhook raw body
 |--------------------------------------------------------------------------
 | This must remain before express.json().
 |
-| Webhook URL:
-| https://aemasystems-1.onrender.com/api/payments/webhook
+| The final route is registered by paymentRoutes:
+| POST /api/payments/webhook
 */
 
 app.use(
@@ -42,77 +137,6 @@ app.use(
     limit: "2mb",
   })
 );
-
-/*
-|--------------------------------------------------------------------------
-| CORS
-|--------------------------------------------------------------------------
-*/
-
-const corsOptions = {
-  origin(origin, callback) {
-    /*
-     * Requests without an Origin header include server-to-server requests,
-     * Stripe webhooks, Postman, and direct browser navigation.
-     */
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    const isAllowed =
-      allowedOrigins.includes(origin) ||
-      (
-        typeof origin === "string" &&
-        origin.endsWith(".vercel.app")
-      );
-
-    if (isAllowed) {
-      return callback(null, true);
-    }
-
-    console.error(
-      "Blocked by CORS:",
-      origin
-    );
-
-    return callback(
-      new Error(
-        `Not allowed by CORS: ${origin}`
-      )
-    );
-  },
-
-  credentials: true,
-
-  methods: [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS",
-  ],
-
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-  ],
-};
-
-app.use(cors(corsOptions));
-
-/*
- * Handles preflight requests.
- * This form works with the current Express router setup.
- */
-app.options("*", cors(corsOptions));
-
-/*
-|--------------------------------------------------------------------------
-| Request Body Parsers
-|--------------------------------------------------------------------------
-| These must remain after the raw Stripe webhook middleware.
-*/
 
 app.use(
   express.json({
@@ -124,14 +148,29 @@ app.use(
   express.urlencoded({
     extended: true,
     limit: "10mb",
+    parameterLimit: 10_000,
   })
 );
 
-/*
-|--------------------------------------------------------------------------
-| Root and Health Routes
-|--------------------------------------------------------------------------
-*/
+app.use((req, res, next) => {
+  const startedAt = Date.now();
+
+  res.on("finish", () => {
+    const duration = Date.now() - startedAt;
+
+    console.log(
+      [
+        req.method,
+        req.originalUrl,
+        res.statusCode,
+        `${duration}ms`,
+        `requestId=${req.requestId}`,
+      ].join(" ")
+    );
+  });
+
+  next();
+});
 
 app.get("/", (req, res) => {
   return res.status(200).json({
@@ -139,9 +178,8 @@ app.get("/", (req, res) => {
     service: "AEMA Systems API",
     status: "Running",
     version: "1.0.0",
-    environment:
-      process.env.NODE_ENV ||
-      "development",
+    environment: NODE_ENV,
+    requestId: req.requestId,
   });
 });
 
@@ -150,108 +188,37 @@ app.get("/health", (req, res) => {
     success: true,
     service: "AEMA Systems API",
     status: "Healthy",
-    timestamp:
-      new Date().toISOString(),
+    environment: NODE_ENV,
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+    requestId: req.requestId,
   });
 });
 
 /*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-| Every route must be registered before the 404 handler.
-*/
-
-/*
-|--------------------------------------------------------------------------
-| General AEMA Routes
-|--------------------------------------------------------------------------
-*/
-
-app.use(
-  "/api/ai",
-  aiRoutes
-);
-
-app.use(
-  "/api/bookings",
-  bookingRoutes
-);
-
-app.use(
-  "/api/blueprint",
-  blueprintRoutes
-);
-
-app.use(
-  "/api/payments",
-  paymentRoutes
-);
-
-app.use(
-  "/api/reports",
-  reportRoutes
-);
-
-/*
-|--------------------------------------------------------------------------
-| Compliance OS Routes
-|--------------------------------------------------------------------------
-*/
-
-/*
- * Compliance assessment save and evaluation routes:
- *
- * POST /api/compliance/save
- * POST /api/compliance/evaluate
- * GET  /api/compliance/test
+ * Browser diagnostics only.
+ * Stripe itself sends POST requests.
  */
-app.use(
-  "/api/compliance",
-  complianceRoutes
-);
+app.get("/api/payments/webhook", (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message:
+      "Stripe webhook endpoint is available. Stripe must call this URL using POST.",
+    methodExpected: "POST",
+    requestId: req.requestId,
+  });
+});
 
-/*
- * Compliance workspace and generated-document routes:
- *
- * GET   /api/compliance/workspace/by-assessment/:assessmentId
- * GET   /api/compliance/workspace/:workspaceId/documents
- * GET   /api/compliance/workspace/:workspaceId/documents/:slug
- * PATCH /api/compliance/workspace/:workspaceId/documents/:documentId
- */
-app.use(
-  "/api/compliance",
-  complianceWorkspaceRoutes
-);
+app.use("/api/ai", aiRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/blueprint", blueprintRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/reports", reportRoutes);
 
-/*
- * One-time compliance package payment routes:
- *
- * POST /api/compliance/payments/create-checkout-session
- * GET  /api/compliance/payments/session/:sessionId
- */
-app.use(
-  "/api/compliance/payments",
-  compliancePaymentRoutes
-);
-
-/*
- * Monthly hosted Trust Center subscription routes:
- *
- * POST /api/compliance/hosting/create-checkout-session
- * GET  /api/compliance/hosting/session/:sessionId
- */
-app.use(
-  "/api/compliance/hosting",
-  complianceHostingRoutes
-);
-
-/*
-|--------------------------------------------------------------------------
-| 404 Handler
-|--------------------------------------------------------------------------
-| Must remain after every valid API route.
-*/
+app.use("/api/compliance", complianceRoutes);
+app.use("/api/compliance", complianceWorkspaceRoutes);
+app.use("/api/compliance/payments", compliancePaymentRoutes);
+app.use("/api/compliance/hosting", complianceHostingRoutes);
 
 app.use((req, res) => {
   return res.status(404).json({
@@ -259,121 +226,125 @@ app.use((req, res) => {
     message: "Endpoint not found.",
     method: req.method,
     path: req.originalUrl,
+    requestId: req.requestId,
   });
 });
-
-/*
-|--------------------------------------------------------------------------
-| Global Error Handler
-|--------------------------------------------------------------------------
-*/
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error(
-    "Unhandled server error:",
-    err
-  );
-
   const isCorsError =
     typeof err?.message === "string" &&
-    err.message.startsWith(
-      "Not allowed by CORS:"
-    );
+    err.message.startsWith("Not allowed by CORS:");
 
-  const statusCode = isCorsError
-    ? 403
-    : Number.isInteger(
-          err?.status
-        ) &&
-        err.status >= 400 &&
-        err.status < 600
-      ? err.status
-      : 500;
+  const isInvalidJson =
+    err instanceof SyntaxError &&
+    err.status === 400 &&
+    "body" in err;
 
-  return res
-    .status(statusCode)
-    .json({
-      success: false,
+  let statusCode = 500;
+  let publicMessage = "Internal Server Error";
 
-      message:
-        statusCode === 500 &&
-        process.env.NODE_ENV ===
-          "production"
-          ? "Internal Server Error"
-          : err?.message ||
-            "Internal Server Error",
-    });
+  if (isCorsError) {
+    statusCode = 403;
+    publicMessage = err.message;
+  } else if (isInvalidJson) {
+    statusCode = 400;
+    publicMessage = "Invalid JSON request body.";
+  } else if (
+    Number.isInteger(err?.status) &&
+    err.status >= 400 &&
+    err.status < 600
+  ) {
+    statusCode = err.status;
+    publicMessage = err.message || publicMessage;
+  }
+
+  console.error("Unhandled server error:", {
+    message: err?.message,
+    stack: IS_PRODUCTION ? undefined : err?.stack,
+    method: req.method,
+    path: req.originalUrl,
+    requestId: req.requestId,
+  });
+
+  return res.status(statusCode).json({
+    success: false,
+    message:
+      statusCode === 500 && IS_PRODUCTION
+        ? "Internal Server Error"
+        : publicMessage,
+    requestId: req.requestId,
+  });
 });
 
-/*
-|--------------------------------------------------------------------------
-| Start Server
-|--------------------------------------------------------------------------
-*/
-
-const PORT =
-  process.env.PORT || 8000;
-
-const server = app.listen(
-  PORT,
-  () => {
-    console.log(`
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`
 =========================================
 AEMA Systems API Started
 =========================================
-Environment : ${
-      process.env.NODE_ENV ||
-      "development"
-    }
+Environment : ${NODE_ENV}
 Port        : ${PORT}
 Health      : /health
-Webhook     : /api/payments/webhook
+Webhook     : POST /api/payments/webhook
+Payments    : /api/payments
 Compliance  : /api/compliance
-Payments    : /api/compliance/payments
+Comp Pay    : /api/compliance/payments
 Hosting     : /api/compliance/hosting
 =========================================
 `);
+});
+
+server.on("error", (error) => {
+  console.error("HTTP server error:", error);
+
+  if (error.code === "EADDRINUSE") {
+    console.error(`Port ${PORT} is already in use.`);
   }
-);
 
-/*
-|--------------------------------------------------------------------------
-| Graceful Shutdown
-|--------------------------------------------------------------------------
-*/
+  process.exit(1);
+});
 
-function shutdown(signal) {
-  console.log(
-    `\n${signal} received. Shutting down...`
-  );
+let isShuttingDown = false;
+
+function shutdown(signal, exitCode = 0) {
+  if (isShuttingDown) {
+    return;
+  }
+
+  isShuttingDown = true;
+
+  console.log(`\n${signal} received. Shutting down...`);
+
+  const forceShutdownTimer = setTimeout(() => {
+    console.error("Forced shutdown after timeout.");
+    process.exit(1);
+  }, 10_000);
+
+  forceShutdownTimer.unref();
 
   server.close((error) => {
-    if (error) {
-      console.error(
-        "Error during shutdown:",
-        error
-      );
+    clearTimeout(forceShutdownTimer);
 
+    if (error) {
+      console.error("Error during shutdown:", error);
       process.exit(1);
     }
 
-    console.log(
-      "HTTP server closed."
-    );
-
-    process.exit(0);
+    console.log("HTTP server closed.");
+    process.exit(exitCode);
   });
 }
 
-process.on(
-  "SIGTERM",
-  () => shutdown("SIGTERM")
-);
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
+});
 
-process.on(
-  "SIGINT",
-  () => shutdown("SIGINT")
-);
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+  shutdown("uncaughtException", 1);
+});
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 export default app;
