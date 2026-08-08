@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
-font-family: "Canela", "Cormorant Garamond", Georgia, serif;
+
 @theme {
   --color-brand-50: #eef6ff;
   --color-brand-100: #dbeafe;
