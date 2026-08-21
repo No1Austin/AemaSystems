@@ -12,8 +12,5 @@ if (!supabaseKey) {
   throw new Error("Missing VITE_SUPABASE_PUBLISHABLE_KEY");
 }
 
-console.log("Supabase project:", new URL(supabaseUrl).hostname);
-console.log("Supabase key prefix:", supabaseKey.slice(0, 15));
-console.log("Supabase key length:", supabaseKey.length);
 
 export const supabase = createClient(supabaseUrl, supabaseKey);

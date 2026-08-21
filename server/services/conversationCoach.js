@@ -1,179 +1,439 @@
 // server/services/conversationCoach.js
 
-const text = (value = "") => String(value || "").toLowerCase();
+/**
+ * AEMA Conversation Coach
+ *
+ * Responsibilities:
+ * 1. Select the next assessment objective.
+ * 2. Give a short contextual observation.
+ * 3. Ask one clear question.
+ * 4. Avoid unsupported assumptions.
+ * 5. Avoid repeating information already known.
+ * 6. Return structured metadata when required.
+ *
+ * IMPORTANT:
+ * This file should guide the conversation.
+ * It should NOT make final business conclusions before
+ * sufficient information has been collected.
+ */
+
+const normalize = (value = "") =>
+  String(value ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 
 const hasAny = (value = "", words = []) => {
   const clean = Array.isArray(value)
-    ? value.map((item) => text(item)).join(" ")
-    : text(value);
+    ? value.map((item) => normalize(item)).join(" ")
+    : normalize(value);
 
-  return words.some((word) => clean.includes(text(word)));
+  return words.some((word) =>
+    clean.includes(normalize(word))
+  );
 };
 
-const formatGoal = (goal = "") =>
-  String(goal || "")
+const isEmpty = (value) =>
+  value === null ||
+  value === undefined ||
+  value === "" ||
+  (Array.isArray(value) && value.length === 0);
+
+const formatGoal = (goal = "") => {
+  const clean = String(goal || "").trim();
+
+  if (!clean) return "";
+
+  return clean
     .replace(/^get /i, "getting ")
     .replace(/^increase /i, "increasing ")
+    .replace(/^improve /i, "improving ")
     .toLowerCase();
+};
 
-const getObservation = (profile = {}, nextField = "") => {
+const formatValue = (value = "") => {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).join(", ");
+  }
+
+  return String(value || "").trim();
+};
+
+/**
+ * -------------------------------------------------------
+ * OBSERVATION ENGINE
+ * -------------------------------------------------------
+ *
+ * Observations should:
+ * - acknowledge known information;
+ * - explain why the next question matters;
+ * - never invent a problem;
+ * - never prematurely diagnose the business.
+ */
+
+const getObservation = (
+  profile = {},
+  nextField = ""
+) => {
   switch (nextField) {
     case "businessName":
-      return "Let’s start with the business name so AEMA can identify the business properly and, where possible, compare it against public Google Business visibility.";
+      return (
+        "I’ll start with the business identity so the rest of the assessment can be connected to the right company."
+      );
 
     case "businessType":
-      return profile.businessName
-        ? `Great. Now I need to understand what kind of business ${profile.businessName} is so the analysis uses the right industry logic.`
-        : "Now I need to understand the type of business so AEMA can apply the right industry logic, customer journey, and growth model.";
+      if (profile.businessName) {
+        return (
+          `Thanks. Now I need to understand what ${profile.businessName} actually does so I can interpret the rest of the business correctly.`
+        );
+      }
+
+      return (
+        "Next I need to understand what the business actually does so the assessment can use the right business context."
+      );
 
     case "serviceLocation":
-      return profile.businessName
-        ? `To check local visibility and similar businesses, I need to know where ${profile.businessName} primarily operates.`
-        : "Location helps AEMA tailor the strategy around local search, competition, customer behavior, and realistic marketing channels.";
+      if (profile.businessName) {
+        return (
+          `Knowing where ${profile.businessName} operates will help me understand its market, local visibility, customer reach, and competitive environment.`
+        );
+      }
+
+      return (
+        "Location helps me understand the market the business operates in and whether the strategy should be local, regional, national, or online."
+      );
 
     case "goal":
-      return "Now that I understand the business foundation, I need to know the main outcome the Growth Blueprint should focus on.";
+      if (profile.businessType) {
+        return (
+          `I understand the business better now. The next step is identifying the result you most want the business to achieve.`
+        );
+      }
+
+      return (
+        "The main business objective will determine what the rest of the assessment should prioritize."
+      );
 
     case "leadSource":
-      return "Your customer source tells me whether the business needs more visibility, better conversion, stronger follow-up, or a more predictable acquisition system.";
+      if (profile.goal) {
+        return (
+          `Since your current goal is ${formatGoal(
+            profile.goal
+          )}, understanding where customers come from will help identify which acquisition channels are already working.`
+        );
+      }
+
+      return (
+        "Understanding where customers currently come from helps distinguish an awareness problem from a conversion or retention problem."
+      );
 
     case "websiteStatus":
-      return "Your website situation matters because it affects trust, SEO visibility, lead capture, and how easily customers can take action.";
+      return (
+        "Your digital presence is another important part of the picture because a website can affect trust, discovery, lead capture, bookings, and sales."
+      );
 
     case "websiteUrl":
-      return "Great. If the business already has a website, AEMA can include it in the audit and look for conversion, trust, and SEO opportunities.";
+      return (
+        "Since the business already has a website, I can use the actual website rather than relying only on self-reported information."
+      );
 
     case "marketingChannels":
-      return profile.leadSource
-        ? `Since customers currently come through ${profile.leadSource}, I want to understand the full marketing mix and whether the business is too dependent on one channel.`
-        : "Marketing channels show how the business creates awareness and whether those activities connect to real customer acquisition.";
+      if (profile.leadSource) {
+        return (
+          `You mentioned ${formatValue(
+            profile.leadSource
+          )} as a customer source. I also want to understand the other channels the business actively uses.`
+        );
+      }
+
+      return (
+        "The channels you actively use help me understand how the business creates awareness and reaches potential customers."
+      );
 
     case "salesProcess":
-      if (hasAny(profile.marketingChannels, ["instagram", "facebook", "tiktok", "social"])) {
-        return "Social media can create attention, but the sales process determines whether that attention becomes real customers.";
+      if (profile.leadSource) {
+        return (
+          `Now that I know how customers are finding the business, I want to understand what happens after someone becomes interested.`
+        );
       }
-      if (hasAny(profile.leadSource, ["google"])) {
-        return "Google can bring interested prospects, but the sales process determines whether that search interest becomes inquiries, bookings, or sales.";
-      }
-      return "The next important part is understanding how interest turns into payment, booking, or inquiry.";
+
+      return (
+        "The next step is understanding how customer interest turns into an inquiry, booking, purchase, or payment."
+      );
 
     case "targetCustomers":
-      if (hasAny(profile.businessType, ["clothing", "fashion"])) {
-        return "For clothing businesses, the target customer affects style, pricing, content, product presentation, and marketing message.";
+      if (profile.businessType) {
+        return (
+          `Knowing the business type helps, but the strategy also depends on exactly who the business serves.`
+        );
       }
-      if (hasAny(profile.businessType, ["cleaning"])) {
-        return "For cleaning businesses, residential customers, offices, landlords, and commercial clients all need different messaging.";
-      }
-      if (hasAny(profile.businessType, ["restaurant", "food"])) {
-        return "For food businesses, knowing the customer helps shape the menu, pricing, delivery options, content, and local marketing.";
-      }
-      return "Before I recommend a growth strategy, I need to understand the exact type of customer the business is trying to attract.";
+
+      return (
+        "A useful growth strategy needs a clear picture of the people or organizations most likely to buy."
+      );
 
     case "mainOffer":
-      return profile.targetCustomers
-        ? "That gives me a clearer picture of who the business serves. Now I need to understand the main offer those customers are buying."
-        : "The main offer is the center of the growth strategy. The clearer the offer, the easier it is to market and sell.";
+      if (profile.targetCustomers) {
+        return (
+          `I now have a clearer idea of who the business serves. Next I need to understand the main thing those customers are actually paying for.`
+        );
+      }
+
+      return (
+        "The primary offer is central to the assessment because marketing, pricing, conversion, and customer experience all depend on what is actually being sold."
+      );
 
     case "automationNeed":
-      if (hasAny(profile.salesProcess, ["whatsapp", "dm", "manual", "phone"])) {
-        return "That sounds like a mostly manual sales process, which is often where growing businesses start losing time, leads, and follow-ups.";
+      /**
+       * IMPORTANT:
+       *
+       * Do NOT automatically describe phone, WhatsApp,
+       * DMs, walk-ins, etc. as a problem.
+       *
+       * We have not yet asked the user which activity
+       * actually consumes the most time.
+       */
+
+      if (
+        hasAny(
+          profile.salesProcess,
+          ["whatsapp", "dm", "phone", "walk-in", "invoice"]
+        )
+      ) {
+        return (
+          `I understand how customers currently move through the sales or booking process. Now I want to look beyond that and identify where time is actually being spent across the business.`
+        );
       }
-      return "Now I want to identify where the business is losing the most time operationally.";
+
+      if (profile.salesProcess) {
+        return (
+          "That gives me the customer process. The next question is about operational effort—what actually consumes the most hands-on time."
+        );
+      }
+
+      return (
+        "Now I want to understand where the business is spending the most hands-on time so I can distinguish necessary work from work that may be simplified or automated."
+      );
 
     case "biggestChallenge":
-      return profile.goal
-        ? `Since the goal is ${formatGoal(profile.goal)}, the biggest challenge will help identify the first real growth blocker.`
-        : "This is important because the biggest growth blocker usually tells us where the first priority should be.";
+      if (profile.goal && profile.automationNeed) {
+        return (
+          `I understand both the goal and where significant time is being spent. Now I need to identify the biggest obstacle preventing the business from moving forward.`
+        );
+      }
+
+      if (profile.goal) {
+        return (
+          `Since the goal is ${formatGoal(
+            profile.goal
+          )}, identifying the biggest blocker will help determine what should be addressed first.`
+        );
+      }
+
+      return (
+        "The biggest current obstacle helps determine where the first meaningful improvement should be made."
+      );
 
     case "monthlyCustomers":
-      return "Customer volume helps me understand whether the business needs foundation-building, conversion improvement, or scaling systems.";
+      return (
+        "Customer volume helps me understand the scale of the operation and whether the priority is acquisition, conversion, capacity, retention, or scaling."
+      );
 
     case "monthlyRevenue":
-      return "Revenue range helps connect the strategy to the current business stage and realistic next steps.";
+      return (
+        "Revenue gives useful context about the current business stage and helps keep recommendations realistic for the size of the operation."
+      );
 
     case "teamSize":
-      return "Team size tells me whether the growth plan should be built around solo execution, delegation, automation, or stronger internal systems.";
+      return (
+        "Team size helps me understand who is actually available to execute the strategy and where automation, delegation, or process improvements may matter."
+      );
 
     case "businessStage":
-      return "Business age helps separate early-stage problems from scaling problems, because a new business and an established business need different priorities.";
+      return (
+        "The length of time the business has been operating helps distinguish early-stage challenges from problems that appear during growth and scaling."
+      );
 
     case "websiteGoal":
-      return "Since the business has a website, it needs one clear purpose so visitors know exactly what action to take.";
+      return (
+        "Since the business has a website, I also need to understand the primary action that website is supposed to generate."
+      );
 
     default:
-      return "That helps. I am building a clearer picture before generating the Growth Blueprint.";
+      return (
+        "That adds useful context. I’m continuing to build the business picture before producing the Growth Blueprint."
+      );
   }
 };
 
-const getQuestion = (nextField = "") => {
-  const questions = {
-    businessName:
-      "What is the name of your business? If it has a Google Business Profile, AEMA can use the name and location to check public visibility signals.",
+/**
+ * -------------------------------------------------------
+ * QUESTION ENGINE
+ * -------------------------------------------------------
+ *
+ * Questions should:
+ * - ask one thing at a time;
+ * - allow unexpected/free-text answers;
+ * - provide examples without implying that examples
+ *   are the only valid answers.
+ */
 
-    businessType:
-      "What type of business is it? For example: hair salon, childcare, restaurant, cleaning service, clothing brand, construction company, consulting business, or software business.",
+const QUESTIONS = {
+  businessName:
+    "What is the name of your business?",
 
-    serviceLocation:
-      "What city, region, or market does the business primarily serve?",
+  businessType:
+    "What does the business do? You can describe it in your own words—for example, car repair, childcare, consulting, construction, clothing, software, food services, or anything else.",
 
-    goal:
-      "What main outcome do you want right now: more customers, more sales, better marketing, a stronger website, SEO, automation, or better business systems?",
+  serviceLocation:
+    "Where does the business primarily operate or serve customers? You can give a city, region, country, or say that it operates online.",
 
-    leadSource:
-      "How do most customers currently find you: referrals, Google, social media, walk-ins, paid ads, WhatsApp, agencies, or another source?",
+  goal:
+    "What is the main result you want the business to achieve right now? For example, more customers, higher sales, stronger marketing, better systems, expansion, automation, or something else.",
 
-    websiteStatus:
-      "Do you currently have a website? You can answer yes, no, or paste the website link.",
+  leadSource:
+    "How do most new customers currently discover the business? For example, referrals, Google, social media, walk-ins, advertising, partnerships, or another source.",
 
-    websiteUrl:
-      "Please paste your website link.",
+  websiteStatus:
+    "Does the business currently have a website? You can answer yes, no, or paste the website link.",
 
-    marketingChannels:
-      "Which marketing channels do you currently use? For example: Instagram, Facebook, TikTok, Google, referrals, agencies, WhatsApp, email, flyers, or paid ads.",
+  websiteUrl:
+    "Please paste the website link.",
 
-    salesProcess:
-      "Once someone shows interest, how do they usually buy from you or book your service? For example: WhatsApp, DM, phone call, booking form, website checkout, walk-in, agency referral, or invoice.",
+  marketingChannels:
+    "Which marketing or promotional channels does the business currently use? List as many as apply, or describe them in your own words.",
 
-    targetCustomers:
-      "Who normally buys from you? For example: young adults, families, brides, homeowners, students, professionals, small businesses, agencies, or online shoppers.",
+  salesProcess:
+    "When someone becomes interested, what normally happens from that point until they become a paying customer or complete a booking?",
 
-    mainOffer:
-      "What is your main product or service offer?",
+  targetCustomers:
+    "Who normally buys the product or uses the service? Describe the typical customer in your own words.",
 
-    automationNeed:
-      "What part of the business takes the most manual time right now: bookings, follow-ups, payments, emails, reports, lead management, customer messages, or tasks?",
+  mainOffer:
+    "What is the main product or service customers pay the business for?",
 
-    biggestChallenge:
-      "What is the biggest challenge stopping the business from growing faster?",
+  automationNeed:
+    "What part of running the business takes the most hands-on or manual time? It can be anything—including the actual service you provide, administration, bookings, customer communication, payments, follow-ups, reporting, or something else.",
 
-    monthlyCustomers:
-      "Roughly how many customers do you serve in a typical month? You can answer: under 20, 20-100, 100-500, or 500+.",
+  biggestChallenge:
+    "What is the biggest challenge preventing the business from growing or operating better right now?",
 
-    monthlyRevenue:
-      "What is your approximate monthly revenue range? You can answer: under $2k, $2k-$10k, $10k-$50k, or $50k+.",
+  monthlyCustomers:
+    "Roughly how many customers does the business serve in a typical month? You can give an exact number, an estimate, or a range.",
 
-    teamSize:
-      "How many people work in the business? You can answer: just me, 2-5, 6-20, or 20+.",
+  monthlyRevenue:
+    "What is the approximate monthly revenue? You can give an amount or a rough range if you prefer.",
 
-    businessStage:
-      "How long has the business been operating? Example: idea stage, less than 1 year, 1-3 years, 3-5 years, or over 5 years.",
+  teamSize:
+    "How many people currently work in the business, including you?",
 
-    websiteGoal:
-      "What do you want visitors to do on your website: call, book, buy, request a quote, contact you, or join a list?",
-  };
+  businessStage:
+    "How long has the business been operating? You can give the number of months or years, or say that it is still at the idea stage.",
 
-  return questions[nextField] || "Can you share a little more about the business?";
+  websiteGoal:
+    "What is the main action you want someone to take after visiting the website—for example call, book, buy, request a quote, contact you, subscribe, or something else?",
 };
 
-export const buildConversationalReply = ({ profile = {}, missingFields = [] } = {}) => {
-  const nextField = missingFields[0];
+const getQuestion = (nextField = "") =>
+  QUESTIONS[nextField] ||
+  "Can you tell me a little more about that part of the business?";
+
+/**
+ * -------------------------------------------------------
+ * STRUCTURED TURN BUILDER
+ * -------------------------------------------------------
+ *
+ * This is the preferred function for the future.
+ *
+ * Instead of returning only English, it returns:
+ *
+ * {
+ *   reply,
+ *   expectedField,
+ *   observation,
+ *   question
+ * }
+ *
+ * That means the application no longer needs to guess
+ * what question AEMA asked.
+ */
+
+export const buildConversationTurn = ({
+  profile = {},
+  missingFields = [],
+} = {}) => {
+  const nextField =
+    Array.isArray(missingFields)
+      ? missingFields.find(
+          (field) =>
+            field &&
+            isEmpty(profile[field])
+        )
+      : null;
 
   if (!nextField) {
-    return "Excellent. I have enough information to create your AEMA Growth Blueprint.";
+    return {
+      reply:
+        "Excellent. I have enough information to create your AEMA Growth Blueprint.",
+
+      expectedField: null,
+
+      observation: null,
+
+      question: null,
+
+      complete: true,
+    };
   }
 
-  const observation = getObservation(profile, nextField);
-  const question = getQuestion(nextField);
+  const observation =
+    getObservation(
+      profile,
+      nextField
+    );
 
-  return `${observation}\n\n${question}`;
+  const question =
+    getQuestion(nextField);
+
+  const reply =
+    observation
+      ? `${observation}\n\n${question}`
+      : question;
+
+  return {
+    reply,
+
+    expectedField:
+      nextField,
+
+    observation,
+
+    question,
+
+    complete: false,
+  };
 };
+
+/**
+ * -------------------------------------------------------
+ * BACKWARD-COMPATIBLE FUNCTION
+ * -------------------------------------------------------
+ *
+ * profileStateEngine currently expects a string:
+ *
+ * buildConversationalReply(...)
+ *
+ * Keep this function so nothing else breaks.
+ */
+
+export const buildConversationalReply = ({
+  profile = {},
+  missingFields = [],
+} = {}) => {
+  return buildConversationTurn({
+    profile,
+    missingFields,
+  }).reply;
+};
+
+export default buildConversationalReply;
