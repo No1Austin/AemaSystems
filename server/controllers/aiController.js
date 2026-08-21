@@ -3,50 +3,115 @@
 import { processBusinessConversation } from "../services/profileStateEngine.js";
 import { analyzeBusiness } from "../services/ai/businessAnalyzer.js";
 
+/**
+ * Prevent malformed / empty AI output from reaching the frontend.
+ */
+const cleanReply = (value = "") => {
+  return String(value || "")
+    .replace(/```[\w-]*\s*```/g, "")
+    .replace(/(?:\s*```\s*```\s*)+/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+};
+
 export const chatWithAemaAI = async (req, res) => {
   try {
     const { messages } = req.body;
 
-    if (!messages || !Array.isArray(messages)) {
+    if (!Array.isArray(messages)) {
       return res.status(400).json({
         success: false,
         message: "Messages array is required.",
       });
     }
 
-    // AI extracts everything it can from the conversation
-    const conversation = await processBusinessConversation(messages);
+    /**
+     * Reconstruct the business profile from the complete
+     * conversation.
+     *
+     * processBusinessConversation is responsible for:
+     *
+     * - extracting business facts
+     * - applying answers to expected fields
+     * - semantic extraction
+     * - determining missing fields
+     * - determining the next expected field
+     */
+    const conversation =
+      await processBusinessConversation(messages);
 
     let analysis = null;
 
+    /**
+     * Only generate the Growth Blueprint once enough
+     * business information has been collected.
+     */
     if (conversation.readyForBlueprint) {
       analysis = await analyzeBusiness({
         profile: conversation.profile,
       });
     }
 
+    /**
+     * Never send malformed/empty assistant output.
+     */
+    const reply =
+      cleanReply(conversation.reply) ||
+      "I understood your response, but I could not generate the next question. Please continue telling me about your business.";
+
     return res.status(200).json({
       success: true,
 
-      reply: conversation.reply,
+      reply,
 
-      profile: analysis?.profile || conversation.profile,
+      /**
+       * CRITICAL CONVERSATION STATE
+       *
+       * The frontend must preserve these values.
+       */
+      expectedField:
+        conversation.expectedField || null,
 
-      blueprint: analysis?.blueprint || null,
+      missingFields:
+        Array.isArray(conversation.missingFields)
+          ? conversation.missingFields
+          : [],
 
-      report: analysis?.report || null,
+      readyForBlueprint:
+        Boolean(conversation.readyForBlueprint),
 
-      expertAnalysis: analysis?.expertAnalysis || null,
+      /**
+       * Current structured business knowledge.
+       */
+      profile:
+        analysis?.profile ||
+        conversation.profile ||
+        {},
 
-      preparationNotes: analysis?.preparationNotes || null,
+      /**
+       * Blueprint/report information.
+       */
+      blueprint:
+        analysis?.blueprint || null,
+
+      report:
+        analysis?.report || null,
+
+      expertAnalysis:
+        analysis?.expertAnalysis || null,
+
+      preparationNotes:
+        analysis?.preparationNotes || null,
     });
   } catch (error) {
-    console.error("AEMA AI Error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("AEMA AI Error:", error);
+    }
 
     return res.status(500).json({
       success: false,
-      message: "AEMA AI failed to respond.",
-      error: error.message,
+      message:
+        "AEMA AI could not process the conversation. Please try again.",
     });
   }
 };

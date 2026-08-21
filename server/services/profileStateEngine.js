@@ -13,6 +13,10 @@ import {
   REQUIRED_BLUEPRINT_FIELDS,
 } from "./businessProfileSchema.js";
 
+
+import {
+  extractSemanticBusinessFacts,
+} from "./semanticProfileExtractor.js";
 /**
  * ============================================================
  * AEMA PROFILE STATE ENGINE

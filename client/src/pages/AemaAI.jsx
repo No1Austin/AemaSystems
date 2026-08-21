@@ -8,22 +8,52 @@ import { ArrowUp, Trash2, Menu } from "lucide-react";
 const firstQuestion =
   "Hi, I'm AEMA AI — your Business Intelligence Partner. Let's start by identifying your business properly. What is the name of your business?";
 
+const createInitialAssistantMessage = () => ({
+  role: "assistant",
+  content: firstQuestion,
+
+  metadata: {
+    expectedField: "businessName",
+    missingFields: [],
+    readyForBlueprint: false,
+  },
+
+  blueprint: null,
+  profile: {},
+});
+
+const sanitizeAssistantReply = (value = "") => {
+  return String(value || "")
+    .replace(/```[\w-]*\s*```/g, "")
+    .replace(/(?:\s*```\s*```\s*)+/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+};
+
 const getInitialMessages = () => {
-  const savedMessages = localStorage.getItem("aema_ai_messages");
+  const savedMessages =
+    localStorage.getItem("aema_ai_messages");
 
   if (savedMessages) {
     try {
-      return JSON.parse(savedMessages);
+      const parsed =
+        JSON.parse(savedMessages);
+
+      if (
+        Array.isArray(parsed) &&
+        parsed.length > 0
+      ) {
+        return parsed;
+      }
     } catch {
-      localStorage.removeItem("aema_ai_messages");
+      localStorage.removeItem(
+        "aema_ai_messages"
+      );
     }
   }
 
   return [
-    {
-      role: "assistant",
-      content: firstQuestion,
-    },
+    createInitialAssistantMessage(),
   ];
 };
 
@@ -31,88 +61,194 @@ export default function AemaAI() {
   const chatEndRef = useRef(null);
   const typingIntervalRef = useRef(null);
 
-  const [messages, setMessages] = useState(getInitialMessages);
-  const [input, setInput] = useState("");
-  const [showPricing, setShowPricing] = useState(false);
-  const [isThinking, setIsThinking] = useState(false);
-  const [typingMessage, setTypingMessage] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [navOpen, setNavOpen] = useState(false);
+  const [messages, setMessages] =
+    useState(getInitialMessages);
+
+  const [input, setInput] =
+    useState("");
+
+  const [showPricing, setShowPricing] =
+    useState(false);
+
+  const [isThinking, setIsThinking] =
+    useState(false);
+
+  const [
+    typingMessage,
+    setTypingMessage,
+  ] = useState(null);
+
+  const [
+    showDeleteModal,
+    setShowDeleteModal,
+  ] = useState(false);
+
+  const [navOpen, setNavOpen] =
+    useState(false);
 
   const latestBlueprint =
     messages
       .slice()
       .reverse()
-      .find((msg) => msg.blueprint)?.blueprint || {};
+      .find(
+        (msg) => msg.blueprint
+      )?.blueprint || {};
 
-  const isBusy = isThinking || Boolean(typingMessage);
+  const isBusy =
+    isThinking ||
+    Boolean(typingMessage);
 
-  const typeAssistantReply = ({ content, blueprint }) => {
+  const typeAssistantReply = ({
+    content,
+    blueprint = null,
+    expectedField = null,
+    missingFields = [],
+    profile = {},
+    readyForBlueprint = false,
+  }) => {
     let index = 0;
-    const safeContent = content || "I could not generate a response.";
 
-    if (typingIntervalRef.current) {
-      clearInterval(typingIntervalRef.current);
+    const cleaned =
+      sanitizeAssistantReply(content);
+
+    const safeContent =
+      cleaned ||
+      "I understood your response, but I could not generate a useful reply. Please continue telling me about your business.";
+
+    if (
+      typingIntervalRef.current
+    ) {
+      clearInterval(
+        typingIntervalRef.current
+      );
     }
+
+    const metadata = {
+      expectedField:
+        expectedField || null,
+
+      missingFields:
+        Array.isArray(
+          missingFields
+        )
+          ? missingFields
+          : [],
+
+      readyForBlueprint:
+        Boolean(
+          readyForBlueprint
+        ),
+    };
 
     setTypingMessage({
       role: "assistant",
       content: "",
       blueprint: null,
+      profile: profile || {},
+      metadata,
     });
 
-    typingIntervalRef.current = setInterval(() => {
-      index += 1;
+    typingIntervalRef.current =
+      setInterval(() => {
+        index += 1;
 
-      setTypingMessage({
-        role: "assistant",
-        content: safeContent.slice(0, index),
-        blueprint: null,
-      });
+        setTypingMessage({
+          role: "assistant",
+          content:
+            safeContent.slice(
+              0,
+              index
+            ),
 
-      if (index >= safeContent.length) {
-        clearInterval(typingIntervalRef.current);
-        typingIntervalRef.current = null;
+          blueprint: null,
+          profile:
+            profile || {},
+          metadata,
+        });
 
-        setTypingMessage(null);
+        if (
+          index >=
+          safeContent.length
+        ) {
+          clearInterval(
+            typingIntervalRef.current
+          );
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: safeContent,
-            blueprint: blueprint || null,
-          },
-        ]);
-      }
-    }, 18);
+          typingIntervalRef.current =
+            null;
+
+          setTypingMessage(null);
+
+          setMessages(
+            (prev) => [
+              ...prev,
+
+              {
+                role:
+                  "assistant",
+
+                content:
+                  safeContent,
+
+                blueprint:
+                  blueprint ||
+                  null,
+
+                profile:
+                  profile || {},
+
+                metadata,
+              },
+            ]
+          );
+        }
+      }, 18);
   };
 
   useEffect(() => {
-    localStorage.setItem("aema_ai_messages", JSON.stringify(messages));
+    localStorage.setItem(
+      "aema_ai_messages",
+      JSON.stringify(messages)
+    );
   }, [messages]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({
-      behavior: "auto",
-    });
-  }, [messages, isThinking, typingMessage]);
+    chatEndRef.current
+      ?.scrollIntoView({
+        behavior: "auto",
+      });
+  }, [
+    messages,
+    isThinking,
+    typingMessage,
+  ]);
 
   useEffect(() => {
-    const hideTawkWidget = () => {
-      if (window.Tawk_API?.hideWidget) {
-        window.Tawk_API.hideWidget();
-      }
-    };
+    const hideTawkWidget =
+      () => {
+        if (
+          window.Tawk_API
+            ?.hideWidget
+        ) {
+          window.Tawk_API.hideWidget();
+        }
+      };
 
     hideTawkWidget();
 
-    const interval = setInterval(hideTawkWidget, 500);
+    const interval =
+      setInterval(
+        hideTawkWidget,
+        500
+      );
 
     return () => {
       clearInterval(interval);
 
-      if (window.Tawk_API?.showWidget) {
+      if (
+        window.Tawk_API
+          ?.showWidget
+      ) {
         window.Tawk_API.showWidget();
       }
     };
@@ -120,68 +256,125 @@ export default function AemaAI() {
 
   useEffect(() => {
     return () => {
-      if (typingIntervalRef.current) {
-        clearInterval(typingIntervalRef.current);
+      if (
+        typingIntervalRef.current
+      ) {
+        clearInterval(
+          typingIntervalRef.current
+        );
       }
     };
   }, []);
 
   const clearChat = () => {
-    if (typingIntervalRef.current) {
-      clearInterval(typingIntervalRef.current);
-      typingIntervalRef.current = null;
+    if (
+      typingIntervalRef.current
+    ) {
+      clearInterval(
+        typingIntervalRef.current
+      );
+
+      typingIntervalRef.current =
+        null;
     }
 
-    localStorage.removeItem("aema_ai_messages");
+    localStorage.removeItem(
+      "aema_ai_messages"
+    );
+
     setInput("");
     setShowPricing(false);
     setIsThinking(false);
     setTypingMessage(null);
 
     setMessages([
-      {
-        role: "assistant",
-        content: firstQuestion,
-      },
+      createInitialAssistantMessage(),
     ]);
 
     setShowDeleteModal(false);
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || isBusy) return;
+    if (
+      !input.trim() ||
+      isBusy
+    ) {
+      return;
+    }
 
     const userMessage = {
       role: "user",
-      content: input.trim(),
+      content:
+        input.trim(),
     };
 
-    const updatedMessages = [...messages, userMessage];
+    const updatedMessages = [
+      ...messages,
+      userMessage,
+    ];
 
-    setMessages(updatedMessages);
+    setMessages(
+      updatedMessages
+    );
+
     setInput("");
     setIsThinking(true);
 
     try {
-      const result = await sendMessageToAemaAI(updatedMessages);
+      const result =
+        await sendMessageToAemaAI(
+          updatedMessages
+        );
 
       setTimeout(() => {
         setIsThinking(false);
 
         typeAssistantReply({
-          content: result?.reply,
-          blueprint: result?.blueprint || null,
+          content:
+            result?.reply,
+
+          blueprint:
+            result?.blueprint ||
+            null,
+
+          expectedField:
+            result?.expectedField ||
+            null,
+
+          missingFields:
+            result?.missingFields ||
+            [],
+
+          profile:
+            result?.profile ||
+            {},
+
+          readyForBlueprint:
+            Boolean(
+              result
+                ?.readyForBlueprint
+            ),
         });
       }, 900);
     } catch (error) {
-      console.error(error);
+      if (
+        import.meta.env.DEV
+      ) {
+        console.error(error);
+      }
 
       setIsThinking(false);
 
       typeAssistantReply({
         content:
           "Sorry, I could not connect to AEMA AI right now. Please try again.",
+
         blueprint: null,
+        expectedField: null,
+        missingFields: [],
+        profile: {},
+        readyForBlueprint:
+          false,
       });
     }
   };
@@ -190,7 +383,9 @@ export default function AemaAI() {
     <main className="aema-ai-page">
       <Navbar
         externalOpen={navOpen}
-        setExternalOpen={setNavOpen}
+        setExternalOpen={
+          setNavOpen
+        }
         hideMobileToggle
         className="aema-ai-navbar"
       />
@@ -198,7 +393,11 @@ export default function AemaAI() {
       <section className="aema-chat-window">
         <div className="chat-header">
           <div className="chat-brand">
-            <img src="/aema-logo.png" alt="AEMA AI" className="aema-logo" />
+            <img
+              src="/aema-logo.png"
+              alt="AEMA AI"
+              className="aema-logo"
+            />
 
             <p className="brand-tagline">
               Your Business Intelligence Partner
@@ -208,199 +407,382 @@ export default function AemaAI() {
           <div className="ai-header-actions">
             <button
               className="clear-chat-btn"
-              onClick={() => setShowDeleteModal(true)}
+              onClick={() =>
+                setShowDeleteModal(
+                  true
+                )
+              }
               type="button"
             >
-              <Trash2 size={18} />
-              <span>Clear Chat</span>
+              <Trash2
+                size={18}
+              />
+
+              <span>
+                Clear Chat
+              </span>
             </button>
 
             <button
               className="ai-menu-btn"
-              onClick={() => setNavOpen((prev) => !prev)}
+              onClick={() =>
+                setNavOpen(
+                  (prev) =>
+                    !prev
+                )
+              }
               type="button"
             >
-              <Menu size={22} />
+              <Menu
+                size={22}
+              />
             </button>
           </div>
         </div>
 
         <div className="chat-body">
-          {messages.map((msg, index) => (
-            <div key={index} className={"chat-message " + msg.role}>
-              <p>{msg.content}</p>
+          {messages.map(
+            (msg, index) => (
+              <div
+                key={index}
+                className={
+                  "chat-message " +
+                  msg.role
+                }
+              >
+                <p>
+                  {msg.content}
+                </p>
 
-              {msg.blueprint && (
-                <div className="blueprint-card">
-                  <h2>AEMA Growth Blueprint</h2>
+                {msg.blueprint && (
+                  <div className="blueprint-card">
+                    <h2>
+                      AEMA Growth Blueprint
+                    </h2>
 
-                  <div className="blueprint-grid">
-                    <div>
-                      <span>Business</span>
-                      <strong>{msg.blueprint.businessType}</strong>
-                    </div>
-
-                    <div>
-                      <span>Goal</span>
-                      <strong>{msg.blueprint.goal}</strong>
-                    </div>
-
-                    <div>
-                      <span>Lead Source</span>
-                      <strong>{msg.blueprint.leadSource}</strong>
-                    </div>
-
-                    <div>
-                      <span>Website</span>
-                      <strong>{msg.blueprint.websiteStatus}</strong>
-                    </div>
-
-                    {msg.blueprint.websiteUrl && (
+                    <div className="blueprint-grid">
                       <div>
-                        <span>Website URL</span>
-                        <strong>{msg.blueprint.websiteUrl}</strong>
+                        <span>
+                          Business
+                        </span>
+
+                        <strong>
+                          {
+                            msg
+                              .blueprint
+                              .businessType
+                          }
+                        </strong>
                       </div>
-                    )}
 
-                    <div>
-                      <span>Automation</span>
-                      <strong>{msg.blueprint.automationNeed}</strong>
+                      <div>
+                        <span>
+                          Goal
+                        </span>
+
+                        <strong>
+                          {
+                            msg
+                              .blueprint
+                              .goal
+                          }
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Lead Source
+                        </span>
+
+                        <strong>
+                          {
+                            msg
+                              .blueprint
+                              .leadSource
+                          }
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Website
+                        </span>
+
+                        <strong>
+                          {
+                            msg
+                              .blueprint
+                              .websiteStatus
+                          }
+                        </strong>
+                      </div>
+
+                      {msg
+                        .blueprint
+                        .websiteUrl && (
+                        <div>
+                          <span>
+                            Website URL
+                          </span>
+
+                          <strong>
+                            {
+                              msg
+                                .blueprint
+                                .websiteUrl
+                            }
+                          </strong>
+                        </div>
+                      )}
+
+                      <div>
+                        <span>
+                          Automation
+                        </span>
+
+                        <strong>
+                          {
+                            msg
+                              .blueprint
+                              .automationNeed
+                          }
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Growth Potential
+                        </span>
+
+                        <strong>
+                          {
+                            msg
+                              .blueprint
+                              .growthPotential
+                          }
+                        </strong>
+                      </div>
                     </div>
 
-                    <div>
-                      <span>Growth Potential</span>
-                      <strong>{msg.blueprint.growthPotential}</strong>
+                    <h3>
+                      Recommended Actions
+                    </h3>
+
+                    <ul>
+                      {msg.blueprint.recommendations?.map(
+                        (
+                          item,
+                          i
+                        ) => (
+                          <li
+                            key={i}
+                          >
+                            {
+                              item
+                            }
+                          </li>
+                        )
+                      )}
+                    </ul>
+
+                    <h3>
+                      Recommended AEMA Services
+                    </h3>
+
+                    <div className="service-tags">
+                      {msg.blueprint.recommendedServices?.map(
+                        (
+                          service,
+                          i
+                        ) => (
+                          <span
+                            key={i}
+                          >
+                            {
+                              service
+                            }
+                          </span>
+                        )
+                      )}
                     </div>
+
+                    <button
+                      className="blueprint-cta"
+                      onClick={() =>
+                        setShowPricing(
+                          true
+                        )
+                      }
+                      type="button"
+                    >
+                      Unlock Full Report
+                    </button>
                   </div>
-
-                  <h3>Recommended Actions</h3>
-
-                  <ul>
-                    {msg.blueprint.recommendations?.map((item, i) => (
-                      <li key={i}>{item}</li>
-                    ))}
-                  </ul>
-
-                  <h3>Recommended AEMA Services</h3>
-
-                  <div className="service-tags">
-                    {msg.blueprint.recommendedServices?.map((service, i) => (
-                      <span key={i}>{service}</span>
-                    ))}
-                  </div>
-
-                  <button
-                    className="blueprint-cta"
-                    onClick={() => setShowPricing(true)}
-                    type="button"
-                  >
-                    Unlock Full Report
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            )
+          )}
 
           {isThinking && (
             <div className="chat-message assistant thinking">
               <p>
-                AEMA is reasoning<span className="thinking-dots">...</span>
+                AEMA is reasoning
+                <span className="thinking-dots">
+                  ...
+                </span>
               </p>
             </div>
           )}
 
           {typingMessage && (
             <div className="chat-message assistant typing">
-              <p>{typingMessage.content}</p>
+              <p>
+                {
+                  typingMessage.content
+                }
+              </p>
             </div>
           )}
 
-          <div ref={chatEndRef} />
+          <div
+            ref={chatEndRef}
+          />
         </div>
 
-        {messages.length <= 1 && !isBusy && (
-          <div className="suggestions">
-            <button
-              onClick={() => setInput("I need more customers for my business")}
-              type="button"
-            >
-              Get More Customers
-            </button>
+        {messages.length <= 1 &&
+          !isBusy && (
+            <div className="suggestions">
+              <button
+                onClick={() =>
+                  setInput(
+                    "I need more customers for my business"
+                  )
+                }
+                type="button"
+              >
+                Get More Customers
+              </button>
 
-            <button
-              onClick={() => setInput("Audit my website and SEO")}
-              type="button"
-            >
-              Audit My Website
-            </button>
+              <button
+                onClick={() =>
+                  setInput(
+                    "Audit my website and SEO"
+                  )
+                }
+                type="button"
+              >
+                Audit My Website
+              </button>
 
-            <button
-              onClick={() => setInput("Find automation ideas for my business")}
-              type="button"
-            >
-              Find Automation Ideas
-            </button>
+              <button
+                onClick={() =>
+                  setInput(
+                    "Find automation ideas for my business"
+                  )
+                }
+                type="button"
+              >
+                Find Automation Ideas
+              </button>
 
-            <button
-              onClick={() =>
-                window.open(
-                  "https://task-manager-app-mern-phi.vercel.app/",
-                  "_blank"
-                )
-              }
-              type="button"
-            >
-              Use AEMA Task Manager
-            </button>
-          </div>
-        )}
+              <button
+                onClick={() =>
+                  window.open(
+                    "https://task-manager-app-mern-phi.vercel.app/",
+                    "_blank"
+                  )
+                }
+                type="button"
+              >
+                Use AEMA Task Manager
+              </button>
+            </div>
+          )}
 
         <div className="chat-input-area">
           <input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) =>
+              setInput(
+                e.target.value
+              )
+            }
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (
+                e.key ===
+                "Enter"
+              ) {
                 sendMessage();
               }
             }}
-            placeholder={isBusy ? "AEMA is responding..." : "Message AEMA AI..."}
+            placeholder={
+              isBusy
+                ? "AEMA is responding..."
+                : "Message AEMA AI..."
+            }
           />
 
           <button
-            onClick={sendMessage}
+            onClick={
+              sendMessage
+            }
             aria-label="Send message"
             type="button"
-            disabled={isBusy}
+            disabled={
+              isBusy
+            }
           >
-            <ArrowUp size={20} strokeWidth={3} />
+            <ArrowUp
+              size={20}
+              strokeWidth={3}
+            />
           </button>
         </div>
       </section>
 
       <PricingModal
         open={showPricing}
-        onClose={() => setShowPricing(false)}
-        profile={latestBlueprint}
+        onClose={() =>
+          setShowPricing(
+            false
+          )
+        }
+        profile={
+          latestBlueprint
+        }
       />
 
       {showDeleteModal && (
         <div className="delete-modal-overlay">
           <div className="delete-modal">
-            <h3>Delete Chat?</h3>
+            <h3>
+              Delete Chat?
+            </h3>
 
-            <p>This will permanently remove your AEMA conversation history.</p>
+            <p>
+              This will permanently remove your AEMA conversation history.
+            </p>
 
             <div className="delete-modal-actions">
               <button
                 className="cancel-btn"
-                onClick={() => setShowDeleteModal(false)}
+                onClick={() =>
+                  setShowDeleteModal(
+                    false
+                  )
+                }
                 type="button"
               >
                 Cancel
               </button>
 
-              <button className="delete-btn" onClick={clearChat} type="button">
+              <button
+                className="delete-btn"
+                onClick={
+                  clearChat
+                }
+                type="button"
+              >
                 Delete
               </button>
             </div>
