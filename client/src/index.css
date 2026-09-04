@@ -1,6 +1,11 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
+/* =========================================================
+   AEMA SYSTEMS GLOBAL THEME
+   Performance optimized without modifying Navbar behavior
+   ========================================================= */
+
 @theme {
   --color-brand-50: #eef6ff;
   --color-brand-100: #dbeafe;
@@ -66,16 +71,19 @@
     forwards;
 }
 
+
+/* =========================================================
+   ORIGINAL ANIMATIONS
+   ========================================================= */
+
 @keyframes float {
   0%,
   100% {
-    transform:
-      translateY(0);
+    transform: translateY(0);
   }
 
   50% {
-    transform:
-      translateY(-10px);
+    transform: translateY(-10px);
   }
 }
 
@@ -93,34 +101,37 @@
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform:
-      translateY(22px);
+    transform: translateY(22px);
   }
 
   to {
     opacity: 1;
-    transform:
-      translateY(0);
+    transform: translateY(0);
   }
 }
 
 @keyframes scale-in {
   from {
     opacity: 0;
-    transform:
-      scale(0.96);
+    transform: scale(0.96);
   }
 
   to {
     opacity: 1;
-    transform:
-      scale(1);
+    transform: scale(1);
   }
 }
 
+
+/* =========================================================
+   BASE
+   ========================================================= */
+
 html {
   scroll-behavior: smooth;
+
   background: #020617;
+
   font-family:
     var(--font-sans);
 }
@@ -135,7 +146,9 @@ body,
 
 body {
   min-width: 320px;
+
   overflow-x: hidden;
+
   background:
     radial-gradient(
       circle at top left,
@@ -162,14 +175,20 @@ body {
       #020617,
       #020617
     );
+
   color: white;
+
   font-family:
     var(--font-sans);
+
   font-synthesis: none;
+
   text-rendering:
     optimizeLegibility;
+
   -webkit-font-smoothing:
     antialiased;
+
   -moz-osx-font-smoothing:
     grayscale;
 }
@@ -180,8 +199,14 @@ body {
 
 #root {
   min-height: 100vh;
+
   overflow-x: hidden;
 }
+
+
+/* =========================================================
+   TYPOGRAPHY
+   ========================================================= */
 
 h1,
 h2,
@@ -196,8 +221,7 @@ button,
 input,
 textarea,
 select {
-  font-family:
-    inherit;
+  font-family: inherit;
 }
 
 a {
@@ -215,12 +239,24 @@ button {
   cursor: pointer;
 }
 
+
+/* =========================================================
+   MEDIA
+   IMPORTANT:
+   No display:block here because it can affect Navbar SVGs.
+   ========================================================= */
+
 img,
 video,
 canvas,
 svg {
   max-width: 100%;
 }
+
+
+/* =========================================================
+   SELECTION
+   ========================================================= */
 
 ::selection {
   background:
@@ -230,8 +266,14 @@ svg {
       235,
       0.45
     );
+
   color: white;
 }
+
+
+/* =========================================================
+   FORMS
+   ========================================================= */
 
 input,
 textarea,
@@ -243,8 +285,16 @@ button {
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
+
   cursor: pointer;
 }
+
+
+/* =========================================================
+   GLASS CARDS
+   Keep original desktop appearance.
+   Reduce only on smaller screens.
+   ========================================================= */
 
 .glass-card {
   border:
@@ -255,6 +305,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
       255,
       0.1
     );
+
   background:
     rgba(
       255,
@@ -262,13 +313,21 @@ input[type="time"]::-webkit-calendar-picker-indicator {
       255,
       0.045
     );
+
   box-shadow:
     var(--shadow-card);
+
   backdrop-filter:
     blur(20px);
+
   -webkit-backdrop-filter:
     blur(20px);
 }
+
+
+/* =========================================================
+   GRADIENT TEXT
+   ========================================================= */
 
 .aema-gradient-text {
   background:
@@ -278,12 +337,21 @@ input[type="time"]::-webkit-calendar-picker-indicator {
       #2563eb,
       #67e8f9
     );
+
   -webkit-background-clip:
     text;
+
   background-clip:
     text;
-  color: transparent;
+
+  color:
+    transparent;
 }
+
+
+/* =========================================================
+   SECTION GLOW
+   ========================================================= */
 
 .aema-section-glow {
   position: relative;
@@ -291,9 +359,13 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 
 .aema-section-glow::before {
   content: "";
+
   position: absolute;
+
   inset: 0;
+
   pointer-events: none;
+
   background:
     radial-gradient(
       circle at 20% 10%,
@@ -317,9 +389,140 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     );
 }
 
-/* Payment success mobile fixes */
+
+/* =========================================================
+   OFFSCREEN PERFORMANCE
+   Safe performance optimization.
+   Does not affect Navbar.
+   ========================================================= */
+
+.defer-render {
+  content-visibility:
+    auto;
+
+  contain-intrinsic-size:
+    auto 700px;
+}
+
+
+/* =========================================================
+   OPTIONAL PERFORMANCE HELPERS
+   These only work when explicitly applied to an element.
+   They do NOT touch Navbar automatically.
+   ========================================================= */
+
+.desktop-effect {
+  display:
+    none;
+}
+
+.paint-contained {
+  contain:
+    paint;
+}
+
+.layout-contained {
+  contain:
+    layout paint;
+}
+
+
+/* =========================================================
+   MOBILE PERFORMANCE
+   IMPORTANT:
+   Navbar/header/nav are deliberately NOT targeted.
+   ========================================================= */
+
+@media (max-width: 767px) {
+
+  /*
+   * Only cards using .glass-card become cheaper.
+   * Navbar is untouched unless Navbar itself uses glass-card.
+   */
+  .glass-card {
+    background:
+      rgba(
+        15,
+        23,
+        42,
+        0.96
+      );
+
+    box-shadow:
+      0 10px 28px
+      rgba(
+        0,
+        0,
+        0,
+        0.18
+      );
+
+    backdrop-filter:
+      none;
+
+    -webkit-backdrop-filter:
+      none;
+  }
+
+
+  /*
+   * Reduce decorative section glow.
+   * Does not affect Navbar.
+   */
+  .aema-section-glow::before {
+    background:
+      radial-gradient(
+        circle at 20% 10%,
+        rgba(
+          37,
+          99,
+          235,
+          0.07
+        ),
+        transparent 30%
+      );
+  }
+
+
+  /*
+   * Disable reusable infinite decorative animations
+   * on smaller screens.
+   *
+   * These apply only when those animation classes
+   * are explicitly present.
+   */
+  .animate-float {
+    animation:
+      none !important;
+  }
+
+  .animate-glow {
+    animation:
+      none !important;
+  }
+}
+
+
+/* =========================================================
+   DESKTOP EFFECTS
+   ========================================================= */
+
+@media (min-width: 768px) {
+
+  .desktop-effect {
+    display:
+      block;
+  }
+}
+
+
+/* =========================================================
+   PAYMENT SUCCESS MOBILE FIXES
+   Original functionality preserved.
+   ========================================================= */
 
 @media (max-width: 640px) {
+
   .payment-success-page,
   .payment-success-page * {
     box-sizing:
@@ -327,10 +530,15 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   }
 
   .payment-success-page {
-    width: 100%;
-    overflow-x: hidden;
+    width:
+      100%;
+
+    overflow-x:
+      hidden;
+
     padding-left:
       12px !important;
+
     padding-right:
       12px !important;
   }
@@ -343,18 +551,23 @@ input[type="time"]::-webkit-calendar-picker-indicator {
       100% !important;
   }
 
-  .payment-success-page .report-mobile-card {
+  .payment-success-page
+  .report-mobile-card {
     width:
       100% !important;
+
     min-width:
       0 !important;
   }
 
-  .payment-success-page .growth-projection-grid {
+  .payment-success-page
+  .growth-projection-grid {
     display:
       grid !important;
+
     grid-template-columns:
       1fr !important;
+
     gap:
       12px !important;
   }
@@ -363,30 +576,42 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   .payment-success-page li {
     overflow-wrap:
       anywhere;
+
     word-break:
       normal;
   }
 
-  .payment-success-page .report-actions {
+  .payment-success-page
+  .report-actions {
     flex-direction:
       column !important;
   }
 
-  .payment-success-page .report-actions button,
-  .payment-success-page .report-actions a {
+  .payment-success-page
+  .report-actions button,
+  .payment-success-page
+  .report-actions a {
     width:
       100% !important;
+
     text-align:
       center;
+
     justify-content:
       center;
   }
 }
 
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
 @media (
   prefers-reduced-motion:
     reduce
 ) {
+
   html {
     scroll-behavior:
       auto;
@@ -397,9 +622,72 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   *::after {
     animation-duration:
       0.01ms !important;
+
     animation-iteration-count:
       1 !important;
+
     transition-duration:
       0.01ms !important;
+  }
+}
+
+
+/* =========================================================
+   FIXED NAV + HOMEPAGE ALIGNMENT
+   Navbar, Hero and body sections share this exact grid.
+   ========================================================= */
+
+html {
+  scroll-padding-top: 104px;
+}
+
+.aema-container {
+  width: min(calc(100% - 24px), 1320px);
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .aema-container {
+    width: min(calc(100% - 40px), 1320px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .aema-container {
+    width: min(calc(100% - 96px), 1320px);
+  }
+}
+
+@media (min-width: 1440px) {
+  .aema-container {
+    width: min(calc(100% - 128px), 1320px);
+  }
+}
+
+/* Keep lower sections cheap until they approach the viewport. */
+.defer-render {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
+}
+
+
+/* =========================================================
+   MOBILE LAYOUT SAFETY
+   ========================================================= */
+
+@media (max-width: 767px) {
+  .mobile-stack {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .mobile-full {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobile-safe-text {
+    overflow-wrap: anywhere;
   }
 }

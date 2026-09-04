@@ -217,10 +217,8 @@ const QUESTION_RULES = [
       "main outcome you want",
       "what do you want to achieve",
       "what are you trying to achieve",
-      "what do you want right now",
       "what should your growth blueprint focus on",
       "what would success look like",
-      "what would you most like to improve",
       "what is your primary objective",
     ],
     supportingWords: [

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -17,10 +18,10 @@ import {
 
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
-import Services from "../components/Services";
-import Industries from "../components/Industries";
-import Founder from "../components/Founder";
-import BookingForm from "../components/BookingForm";
+const Services = lazy(() => import("../components/Services"));
+const Industries = lazy(() => import("../components/Industries"));
+const Founder = lazy(() => import("../components/Founder"));
+const BookingForm = lazy(() => import("../components/BookingForm"));
 import Footer from "../components/Footer";
 
 const COMPLIANCE_OS_URL = "https://aemacompliance.com/";
@@ -238,15 +239,15 @@ function ProductCard({ product }) {
         to-white/[0.02]
         p-7
         shadow-[0_30px_90px_rgba(0,0,0,0.28)]
-        backdrop-blur-2xl
+        md:backdrop-blur-lg
         transition
-        hover:border-white/20
+        md:hover:border-white/20
       "
     >
       <div
         aria-hidden="true"
         className={[
-          "absolute right-[-3rem] top-[-3rem] h-32 w-32 rounded-full blur-3xl transition duration-300 group-hover:scale-125",
+          "absolute right-[-3rem] top-[-3rem] h-32 w-32 rounded-full hidden md:block md:blur-3xl transition duration-300 md:group-hover:scale-110",
           style.glow,
         ].join(" ")}
       />
@@ -339,7 +340,7 @@ function ProductCard({ product }) {
             size={16}
             className="
               transition
-              group-hover:translate-x-1
+              md:group-hover:translate-x-1
             "
           />
         </div>
@@ -397,13 +398,13 @@ function ProofCard({ item }) {
         p-6
         shadow-xl
         shadow-black/10
-        backdrop-blur-xl
+        md:backdrop-blur-lg
       "
     >
       <div
         aria-hidden="true"
         className={[
-          "absolute right-[-3rem] top-[-3rem] h-28 w-28 rounded-full blur-3xl transition duration-300 group-hover:scale-125",
+          "absolute right-[-3rem] top-[-3rem] h-28 w-28 rounded-full hidden md:block md:blur-3xl transition duration-300 md:group-hover:scale-110",
           style.glow,
         ].join(" ")}
       />
@@ -461,9 +462,9 @@ function EcosystemNode({
         p-4
         shadow-lg
         shadow-black/10
-        backdrop-blur-xl
+        md:backdrop-blur-lg
         transition
-        hover:border-white/20
+        md:hover:border-white/20
       "
     >
       <div
@@ -491,8 +492,8 @@ function EcosystemNode({
           ml-auto
           text-slate-600
           transition
-          group-hover:translate-x-1
-          group-hover:text-white
+          md:group-hover:translate-x-1
+          md:group-hover:text-white
         "
       />
     </motion.div>
@@ -542,13 +543,13 @@ function CompliancePreviewCard({
         p-5
         shadow-lg
         shadow-black/10
-        backdrop-blur-xl
+        md:backdrop-blur-lg
       "
     >
       <div
         aria-hidden="true"
         className={[
-          "absolute right-[-3rem] top-[-3rem] h-24 w-24 rounded-full blur-3xl",
+          "absolute right-[-3rem] top-[-3rem] h-24 w-24 rounded-full hidden md:block md:blur-3xl",
           style.glow,
         ].join(" ")}
       />
@@ -604,7 +605,9 @@ export default function Home() {
           pointer-events-none
           fixed
           inset-0
+          hidden
           opacity-[0.12]
+          md:block
         "
         style={{
           backgroundImage:
@@ -617,11 +620,11 @@ export default function Home() {
 
       <Navbar />
 
-      {/* New premium hero */}
+      {/* Hero and Navbar both use the same .aema-container grid internally */}
       <Hero />
 
       {/* Proof strip */}
-      <section className="relative px-6 py-16 md:py-20">
+      <section className="defer-render relative py-16 md:py-20">
         <div
           aria-hidden="true"
           className="
@@ -633,7 +636,7 @@ export default function Home() {
             -translate-x-1/2
             rounded-full
             bg-blue-400/[0.08]
-            blur-[120px]
+            hidden md:block md:blur-[120px]
           "
         />
 
@@ -646,10 +649,9 @@ export default function Home() {
             amount: 0.2,
           }}
           className="
+            aema-container
             relative
-            mx-auto
             grid
-            max-w-7xl
             gap-5
             md:grid-cols-3
           "
@@ -664,7 +666,7 @@ export default function Home() {
       </section>
 
       {/* AEMA ecosystem */}
-      <section className="relative px-6 py-24">
+      <section className="defer-render relative py-24">
         <div
           aria-hidden="true"
           className="
@@ -675,7 +677,7 @@ export default function Home() {
             w-80
             rounded-full
             bg-blue-400/[0.06]
-            blur-[130px]
+            hidden md:block md:blur-[130px]
           "
         />
 
@@ -689,11 +691,11 @@ export default function Home() {
             w-80
             rounded-full
             bg-emerald-400/[0.06]
-            blur-[130px]
+            hidden md:block md:blur-[130px]
           "
         />
 
-        <div className="relative mx-auto max-w-7xl">
+        <div className="aema-container relative">
           <div
             className="
               grid
@@ -780,7 +782,7 @@ export default function Home() {
                     shadow-lg
                     shadow-blue-950/25
                     transition
-                    hover:-translate-y-0.5
+                    md:hover:-translate-y-0.5
                   "
                 >
                   Explore AEMA AI
@@ -805,8 +807,8 @@ export default function Home() {
                     font-bold
                     text-emerald-100
                     transition
-                    hover:-translate-y-0.5
-                    hover:bg-emerald-400/[0.13]
+                    md:hover:-translate-y-0.5
+                    md:hover:bg-emerald-400/[0.13]
                   "
                 >
                   Open Compliance OS
@@ -835,7 +837,7 @@ export default function Home() {
                 to-white/[0.02]
                 p-6
                 shadow-[0_35px_110px_rgba(0,0,0,0.35)]
-                backdrop-blur-2xl
+                md:backdrop-blur-lg
                 md:p-8
               "
             >
@@ -849,7 +851,7 @@ export default function Home() {
                   w-40
                   rounded-full
                   bg-blue-400/10
-                  blur-[95px]
+                  hidden md:block md:blur-[95px]
                 "
               />
 
@@ -938,9 +940,9 @@ export default function Home() {
       {/* Products */}
       <section
         id="products"
-        className="relative px-6 py-24"
+        className="defer-render relative py-24"
       >
-        <div className="mx-auto max-w-7xl">
+        <div className="aema-container">
           <motion.div
             variants={fadeUp}
             initial="hidden"
@@ -1015,18 +1017,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Existing services */}
-      <Services />
+      {/* Existing services — lazy loaded below the fold */}
+      <Suspense fallback={null}>
+        <div className="defer-render">
+          <Services />
+        </div>
+      </Suspense>
 
       {/* Compliance OS feature */}
       <section
         className="
+          defer-render
           relative
           overflow-hidden
           border-y
           border-white/10
           bg-[#071224]
-          px-6
           py-24
         "
       >
@@ -1040,7 +1046,7 @@ export default function Home() {
             w-80
             rounded-full
             bg-emerald-400/[0.08]
-            blur-[135px]
+            hidden md:block md:blur-[135px]
           "
         />
 
@@ -1054,16 +1060,15 @@ export default function Home() {
             w-80
             rounded-full
             bg-cyan-400/[0.06]
-            blur-[135px]
+            hidden md:block md:blur-[135px]
           "
         />
 
         <div
           className="
+            aema-container
             relative
-            mx-auto
             grid
-            max-w-7xl
             gap-12
             lg:grid-cols-2
             lg:items-center
@@ -1182,7 +1187,7 @@ export default function Home() {
                   shadow-xl
                   shadow-emerald-950/25
                   transition
-                  hover:-translate-y-0.5
+                  md:hover:-translate-y-0.5
                 "
               >
                 Start Compliance Assessment
@@ -1207,8 +1212,8 @@ export default function Home() {
                   font-bold
                   text-white
                   transition
-                  hover:border-white/20
-                  hover:bg-white/[0.08]
+                  md:hover:border-white/20
+                  md:hover:bg-white/[0.08]
                 "
               >
                 Explore Compliance OS
@@ -1238,7 +1243,7 @@ export default function Home() {
               to-white/[0.02]
               p-6
               shadow-[0_35px_110px_rgba(0,0,0,0.35)]
-              backdrop-blur-2xl
+              md:backdrop-blur-lg
               md:p-8
             "
           >
@@ -1252,7 +1257,7 @@ export default function Home() {
                 w-40
                 rounded-full
                 bg-emerald-400/10
-                blur-[95px]
+                hidden md:block md:blur-[95px]
               "
             />
 
@@ -1380,8 +1385,8 @@ export default function Home() {
       </section>
 
       {/* Why AEMA */}
-      <section className="relative px-6 py-24">
-        <div className="mx-auto max-w-7xl">
+      <section className="defer-render relative py-24">
+        <div className="aema-container">
           <div
             className="
               grid
@@ -1472,13 +1477,13 @@ export default function Home() {
                       p-6
                       shadow-xl
                       shadow-black/10
-                      backdrop-blur-xl
+                      md:backdrop-blur-lg
                     "
                   >
                     <div
                       aria-hidden="true"
                       className={[
-                        "absolute right-[-3rem] top-[-3rem] h-28 w-28 rounded-full blur-3xl transition duration-300 group-hover:scale-125",
+                        "absolute right-[-3rem] top-[-3rem] h-28 w-28 rounded-full hidden md:block md:blur-3xl transition duration-300 md:group-hover:scale-110",
                         style.glow,
                       ].join(" ")}
                     />
@@ -1511,16 +1516,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Existing industries */}
-      <Industries />
+      {/* Existing industries — lazy loaded below the fold */}
+      <Suspense fallback={null}>
+        <div className="defer-render">
+          <Industries />
+        </div>
+      </Suspense>
 
       {/* Process */}
-      <section className="px-6 py-24">
+      <section className="defer-render py-24">
         <div
           className="
+            aema-container
             relative
-            mx-auto
-            max-w-7xl
             overflow-hidden
             rounded-[2.2rem]
             border
@@ -1531,7 +1539,7 @@ export default function Home() {
             to-white/[0.02]
             p-7
             shadow-[0_35px_110px_rgba(0,0,0,0.32)]
-            backdrop-blur-2xl
+            md:backdrop-blur-lg
             md:p-12
           "
         >
@@ -1545,7 +1553,7 @@ export default function Home() {
               w-72
               rounded-full
               bg-blue-400/[0.08]
-              blur-[120px]
+              hidden md:block md:blur-[120px]
             "
           />
 
@@ -1636,7 +1644,7 @@ export default function Home() {
       </section>
 
       {/* AEMA AI CTA */}
-      <section className="px-6 py-24">
+      <section className="defer-render py-24">
         <motion.div
           variants={fadeUp}
           initial="hidden"
@@ -1646,10 +1654,9 @@ export default function Home() {
             amount: 0.2,
           }}
           className="
+            aema-container
             relative
-            mx-auto
             grid
-            max-w-7xl
             gap-6
             overflow-hidden
             rounded-[2.2rem]
@@ -1661,7 +1668,7 @@ export default function Home() {
             to-violet-400/[0.08]
             p-7
             shadow-[0_35px_110px_rgba(0,0,0,0.32)]
-            backdrop-blur-2xl
+            md:backdrop-blur-lg
             md:grid-cols-[1fr_auto]
             md:items-center
             md:p-10
@@ -1677,7 +1684,7 @@ export default function Home() {
               w-40
               rounded-full
               bg-blue-400/15
-              blur-[90px]
+              hidden md:block md:blur-[90px]
             "
           />
 
@@ -1740,7 +1747,7 @@ export default function Home() {
               shadow-lg
               shadow-blue-950/25
               transition
-              hover:-translate-y-0.5
+              md:hover:-translate-y-0.5
             "
           >
             Try AEMA AI
@@ -1749,12 +1756,18 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Founder */}
-      <Founder />
+      {/* Founder — lazy loaded below the fold */}
+      <Suspense fallback={null}>
+        <div className="defer-render">
+          <Founder />
+        </div>
+      </Suspense>
 
-      {/* Booking */}
-      <section id="booking">
-        <BookingForm />
+      {/* Booking — lazy loaded below the fold */}
+      <section id="booking" className="defer-render">
+        <Suspense fallback={null}>
+          <BookingForm />
+        </Suspense>
       </section>
 
       {/* Footer */}
